@@ -1,0 +1,10 @@
+/**
+ * @module BrowserEventTranslator
+ * @version <%= version %>
+ * @author jbking,monjudoh
+ * @copyright (c) 2014 jbking,monjudoh<br/>
+ * Dual licensed under the MIT (MIT-LICENSE.txt)<br/>
+ * and GPL (GPL-LICENSE.txt) licenses.
+ * @see https://github.com/monjudoh/BrowserEventTranslator.js
+ * @see BrowserEventTranslator
+ */
