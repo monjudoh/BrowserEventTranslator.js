@@ -4,12 +4,12 @@ define(
     'BrowserEventTranslator/Base','BrowserEventTranslator/PointInfo',
     'BrowserEventTranslator/Point','BrowserEventTranslator/EventType',
     'BrowserEventTranslator/env/supports',
-    'jquery', 'underscore'
+    'underscore'
   ],
   function (Base,PointInfo,
             Point,EventType,
             supports,
-            $, _) {
+            _) {
     var proto = Object.create(Base.prototype);
     proto.constructor = BrowserEventTranslator;
     BrowserEventTranslator.prototype = proto;
@@ -54,33 +54,33 @@ define(
      * @extends BrowserEventTranslator_Base
      *
      * @param {Element} el
-     * @param {BrowserEventTranslator~options} options
+     * @param {BrowserEventTranslator~Options} options
      * @property {object} eventDict key:pointerId,value:PointerEventの辞書。現在このBrowserEventTranslatorでトラッキングされている最中のもの。
      * @private
      */
     function BrowserEventTranslator(el, options) {
       Base.call(this,el,options);
-      var eventSuffix = this._eventSuffix;
       this.pointInfoDict = Object.create(null);
       this.eventDict = Object.create(null);
-      var createCallback = this.wrapUpInJQEventHandler.bind(this);
       this.el.style[symbols['touchAction']] = 'none';
-      this.addEventTrace();
+      var addDOMEvent = this._addDOMEvent.bind(this);
       _(eventHandlers).each(function(handler,type){
-        $(el).on(symbols[type] + eventSuffix,createCallback(handler));
+        addDOMEvent(symbols[type],handler);
       });
-
     }
-    proto.addEventTrace = function addEventTrace() {
-      if (this.trace) {
-        var el = this.el;
-        var eventSuffix = this._eventSuffix;
-        var createCallback = this.wrapUpInJQEventHandler.bind(this);
-        events.forEach(function (type) {
-          $(el).on(symbols[type] + eventSuffix,
-          createCallback(function (ev) {
-            console.log(this.tracePrefix + ev.type,ev.pointerId,this.pointsFromEvent(ev).length,ev);
-          }));
+    /**
+     * @function _addAllEventTrace
+     * @memberOf BrowserEventTranslator_Pointer#
+     * @override
+     * @private
+     * @see BrowserEventTranslator_Base#_addAllEventTrace
+     */
+    proto._addAllEventTrace = function _addAllEventTrace() {
+      if (this.options.trace) {
+        this._addEventTrace(events.map(function(type){
+          return symbols[type];
+        }),function (ev) {
+          console.log(this.tracePrefix + ev.type,ev.pointerId,this.pointsFromEvent(ev).length,ev);
         });
       }
     };

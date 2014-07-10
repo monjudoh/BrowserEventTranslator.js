@@ -3,11 +3,11 @@ define(
   [
     'BrowserEventTranslator/Base','BrowserEventTranslator/PointInfo',
     'BrowserEventTranslator/Point','BrowserEventTranslator/EventType',
-    'jquery', 'underscore'
+    'underscore'
   ],
   function (Base,PointInfo,
             Point,EventType,
-            $, _) {
+            _) {
     var proto = Object.create(Base.prototype);
     proto.constructor = BrowserEventTranslator;
     BrowserEventTranslator.prototype = proto;
@@ -28,29 +28,29 @@ define(
      * @extends BrowserEventTranslator_Base
      *
      * @param {Element} el
-     * @param {BrowserEventTranslator~options} options
+     * @param {BrowserEventTranslator~Options} options
      * @property {BrowserEventTranslator_PointInfo} pointInfo
      * @private
      */
     function BrowserEventTranslator(el, options) {
       Base.call(this,el,options);
-      var eventSuffix = this._eventSuffix;
-      var createCallback = this.wrapUpInJQEventHandler.bind(this);
-      this.addEventTrace();
+      this._addAllEventTrace();
+      var addDOMEvent = this._addDOMEvent.bind(this);
       _(eventHandlers).each(function(handler,type){
-        $(el).on(type + eventSuffix,createCallback(handler));
+        addDOMEvent(type,handler);
       });
     }
-    proto.addEventTrace = function addEventTrace() {
-      if (this.trace) {
-        var el = this.el;
-        var eventSuffix = this._eventSuffix;
-        var createCallback = this.wrapUpInJQEventHandler.bind(this);
-        events.forEach(function (type) {
-          $(el).on(type + eventSuffix,
-          createCallback(function (ev) {
-            console.log(this.tracePrefix + ev.type,ev);
-          }));
+    /**
+     * @function _addAllEventTrace
+     * @memberOf BrowserEventTranslator_Mouse#
+     * @override
+     * @private
+     * @see BrowserEventTranslator_Base#_addAllEventTrace
+     */
+    proto._addAllEventTrace = function _addAllEventTrace() {
+      if (this.options.trace) {
+        this._addEventTrace(events,function (ev) {
+          console.log(this.tracePrefix + ev.type,ev);
         });
       }
     };

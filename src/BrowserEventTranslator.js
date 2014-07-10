@@ -10,7 +10,7 @@ function (Pointer,Touch,Mouse,Point,TouchAndMouse,
           supports,
           isIOS,isIE,isWindows7) {
   /**
-   * @typedef BrowserEventTranslator~options
+   * @typedef BrowserEventTranslator~Options
    * @property {number=} swipeDistance
    * @property {number=} swipeTimeLimit
    * @property {number=} dontSlideDistance
@@ -36,6 +36,17 @@ function (Pointer,Touch,Mouse,Point,TouchAndMouse,
    * @callback BrowserEventTranslator~StopPropagationCallback
    * @param {UIEvent} ev
    * @returns {boolean} trueを返せばev.stopPropagation()が呼ばれるようになる
+   */
+  /**
+   * @name el
+   * @memberOf BrowserEventTranslator#
+   * @type Element
+   * @description event変換の対象となるDOM要素
+   */
+  /**
+   * @name options
+   * @memberOf BrowserEventTranslator#
+   * @type BrowserEventTranslator~Options
    */
   /**
    * @name swipeDistance

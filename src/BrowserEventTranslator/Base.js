@@ -1,10 +1,17 @@
 define('BrowserEventTranslator/Base',
-['jquery', 'underscore', 'BeautifulProperties','BrowserEventTranslator/EventType'],
-function ($, _, BeautifulProperties, EventType) {
+['underscore', 'BeautifulProperties','BrowserEventTranslator/EventType'],
+function (_, BeautifulProperties, EventType) {
+  /**
+   * @callback BrowserEventTranslator_Base~DOMEventHandler
+   * @this BrowserEventTranslator
+   * @param {UIEvent} ev
+   * @private
+   * @description <pre>BrowserEventTranslatorにbindされたDOMEventのhandler</pre>
+   */
   /**
    *
    * @param {Element} el
-   * @param {BrowserEventTranslator~options} options
+   * @param {BrowserEventTranslator~Options} options
    * @constructor BrowserEventTranslator_Base
    * @private
    */
@@ -22,6 +29,7 @@ function ($, _, BeautifulProperties, EventType) {
       trace: false,
       tracePrefix: undefined
     });
+    this.options = options;
     _.map(options,function (value, name) {
       BeautifulProperties.Hookable.define(this, name, {value: value});
       BeautifulProperties.Observable.define(this, name);
@@ -38,35 +46,78 @@ function ($, _, BeautifulProperties, EventType) {
     } else {
       this.tracePrefix = '';
     }
-    this._eventSuffix = _.uniqueId('.app_BrowserEventTranslator');
   }
   var proto = Base.prototype;
   BeautifulProperties.Events.provideMethods(proto);
 
   /**
-   * @function wrapUpInJQEventHandler
+   * @name _DOMEventType2handlers
    * @memberOf BrowserEventTranslator_Base#
-   * @param {function(this:BrowserEventTranslator,UIEvent)} handler DOMEventのhandler
-   * @returns {function}
-   * @description DOMEventのhandlerをラップしてガード込みのjQueryのevent handlerをつくって返す
+   * @see BrowserEventTranslator#el
+   * @private
+   * @description BrowserEventTranslatorでDOM要素(el)に登録した全てのevent handlerをevent type別に抱えておく為の配列の辞書
    */
-  proto.wrapUpInJQEventHandler = function wrapUpInJQEventHandler(handler) {
+  BeautifulProperties.LazyInitializable.define(proto,'_DOMEventType2handlers',{
+    enumerable:false,
+    init:function(){
+      return Object.create(null);
+    }
+  });
+  /**
+   * @function _addDOMEvent
+   * @memberOf BrowserEventTranslator_Base#
+   * @param {string} type event type
+   * @param {BrowserEventTranslator_Base~DOMEventHandler} handler
+   * @see BrowserEventTranslator#el
+   * @private
+   * @description DOMEventのhandlerをラップして、BrowserEventTranslatorにbindされ、ガード込みのhandlerにした上でDOM要素(el)に登録する。
+   */
+  proto._addDOMEvent = function _addDOMEvent(type,handler) {
     var self = this;
-    return function(jqEv){
-      var ev = jqEv.originalEvent;
+    function wrappedHandler(ev) {
       if (self._preHandleEventGuard(ev)) {
         return;
       }
       handler.call(self, ev);
     }
+    var dict = this._DOMEventType2handlers;
+    if (!dict[type]) {
+      dict[type] = [];
+    }
+    dict[type].push(wrappedHandler);
+    this.el.addEventListener(type,wrappedHandler,false);
   };
+  /**
+   * @function _addEventTrace
+   * @memberOf BrowserEventTranslator_Base#
+   * @param {Array.<string>} types
+   * @param {BrowserEventTranslator_Base~DOMEventHandler} traceHandler log出力用handler
+   * @private
+   * @description typesで指定されたtypeのeventが発火したらlogを出力するようにする
+   */
+  proto._addEventTrace = function _addEventTrace(types,traceHandler){
+    var addDOMEvent = this._addDOMEvent.bind(this);
+    types.forEach(function (type) {
+      addDOMEvent(type,traceHandler);
+    });
+  };
+  /**
+   * @function _addAllEventTrace
+   * @memberOf BrowserEventTranslator_Base#
+   * @private
+   * @abstract
+   * @description その環境に存在する全てのevent typeについてeventが発火したらlogを出力するようにする
+   */
+  proto._addAllEventTrace = function _addAllEventTrace() {
+  };
+
   /**
    * @function _preHandleEventGuard
    * @memberOf BrowserEventTranslator_Base#
    * @param {UIEvent} ev
    * @returns {boolean} prevented
    * @description 各eventに設定されたhandlerが呼ばれる前のガード。trueを返した場合はhandlerを呼ばない。
-   * @protected
+   * @private
    */
   proto._preHandleEventGuard = function _preHandleEventGuard(ev) {
     if (this.preventDefaultCallback(ev)) {
@@ -137,9 +188,15 @@ function ($, _, BeautifulProperties, EventType) {
     if (this.trace) {
       console.log(this.tracePrefix + 'destroy');
     }
-    var self = this;
-    var eventSuffix = this._eventSuffix;
-    $(self.el).off(eventSuffix);
+    var dict = this._DOMEventType2handlers;
+    var el = this.el;
+    Object.keys(dict).forEach(function(type){
+      var handlers = dict[type];
+      handlers.forEach(function(handler){
+        el.removeEventListener(type,handler,false);
+      });
+      handlers.length = 0;
+    });
     this.off();
   };
   function degree (rad) { return rad / Math.PI * 180; }

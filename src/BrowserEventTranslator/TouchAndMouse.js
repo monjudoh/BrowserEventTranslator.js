@@ -2,11 +2,11 @@ define('BrowserEventTranslator/TouchAndMouse',
 [
   'BrowserEventTranslator/Base',
   'BrowserEventTranslator/Touch','BrowserEventTranslator/Mouse',
-  'jquery', 'underscore'
+  'underscore'
 ]
 ,function (Base,
            Touch,Mouse,
-           $, _) {
+           _) {
   "use strict";
   var proto = Object.create(Base.prototype);
   proto.constructor = BrowserEventTranslator;
@@ -29,18 +29,17 @@ define('BrowserEventTranslator/TouchAndMouse',
    * @see BrowserEventTranslator_Mouse
    *
    * @param {Element} el
-   * @param {BrowserEventTranslator~options} options
+   * @param {BrowserEventTranslator~Options} options
    * @private
    */
   function BrowserEventTranslator(el, options) {
     Base.call(this,el,options);
-    var eventSuffix = this._eventSuffix;
     this.pointInfoDict = Object.create(null);
-    var createCallback = this.wrapUpInJQEventHandler.bind(this);
-    touchProto.addEventTrace.call(this);
-    mouseProto.addEventTrace.call(this);
+    touchProto._addAllEventTrace.call(this);
+    mouseProto._addAllEventTrace.call(this);
+    var addDOMEvent = this._addDOMEvent.bind(this);
     _(eventHandlers).each(function(handler,type){
-      $(el).on(type + eventSuffix,createCallback(handler));
+      addDOMEvent(type,handler);
     });
   }
   /**

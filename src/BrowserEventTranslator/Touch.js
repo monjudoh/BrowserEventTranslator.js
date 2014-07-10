@@ -2,11 +2,11 @@ define('BrowserEventTranslator/Touch',
   [
     'BrowserEventTranslator/Base','BrowserEventTranslator/PointInfo',
     'BrowserEventTranslator/Point','BrowserEventTranslator/EventType',
-    'jquery', 'underscore'
+    'underscore'
   ],
   function (Base,PointInfo,
             Point,EventType,
-            $, _) {
+            _) {
     "use strict";
     var proto = Object.create(Base.prototype);
     proto.constructor = BrowserEventTranslator;
@@ -32,36 +32,36 @@ define('BrowserEventTranslator/Touch',
      * @extends BrowserEventTranslator_Base
      *
      * @param {Element} el
-     * @param {BrowserEventTranslator~options} options
+     * @param {BrowserEventTranslator~Options} options
      * @property {object} pointInfoDict key:identifier,value:pointInfoの辞書。現在このBrowserEventTranslatorでトラッキングされている最中のもの。
      * @private
      */
     function BrowserEventTranslator(el, options) {
       Base.call(this,el,options);
-      var eventSuffix = this._eventSuffix;
       this.pointInfoDict = Object.create(null);
-      var createCallback = this.wrapUpInJQEventHandler.bind(this);
-      this.addEventTrace();
+      this._addAllEventTrace();
+      var addDOMEvent = this._addDOMEvent.bind(this);
       _(eventHandlers).each(function(handler,type){
-        $(el).on(type + eventSuffix,createCallback(handler));
+        addDOMEvent(type,handler);
       });
       if (this.trace) {
         console.log(this.tracePrefix + 'setup done');
       }
     }
-    proto.addEventTrace = function addEventTrace() {
-      if (this.trace) {
-        var el = this.el;
-        var eventSuffix = this._eventSuffix;
-        var createCallback = this.wrapUpInJQEventHandler.bind(this);
-        events.forEach(function (type) {
-          $(el).on(type + eventSuffix,
-          createCallback(function (ev) {
-            var identifiers = Array_from(ev.touches).map(function(touch){
-              return touch.identifier;
-            });
-            console.log(this.tracePrefix + ev.type,identifiers,ev);
-          }));
+    /**
+     * @function _addAllEventTrace
+     * @memberOf BrowserEventTranslator_Touch#
+     * @override
+     * @private
+     * @see BrowserEventTranslator_Base#_addAllEventTrace
+     */
+    proto._addAllEventTrace = function _addAllEventTrace() {
+      if (this.options.trace) {
+        this._addEventTrace(events,function (ev) {
+          var identifiers = Array_from(ev.touches).map(function(touch){
+            return touch.identifier;
+          });
+          console.log(this.tracePrefix + ev.type,identifiers,ev);
         });
       }
     };
