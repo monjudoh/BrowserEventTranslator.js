@@ -10,7 +10,7 @@ var main = module.exports = function main(options) {
     exclude:'underscore BeautifulProperties'.split(' '),
     distDir:path.resolve(__dirname, 'dist'),
     startBefore: _.template(fs.readFileSync(path.resolve(__dirname, 'copyright.template')).toString())({
-      version:'0.02'
+      version:'0.03'
     })
   },function (builtFilePath,code){
 //    console.log(builtFilePath);

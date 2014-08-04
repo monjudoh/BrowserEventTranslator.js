@@ -1,6 +1,6 @@
 /**
  * @module BrowserEventTranslator
- * @version 0.02
+ * @version 0.03
  * @author jbking,monjudoh
  * @copyright (c) 2014 jbking,monjudoh<br/>
  * Dual licensed under the MIT (MIT-LICENSE.txt)<br/>
@@ -1297,7 +1297,11 @@ define('BrowserEventTranslator', [
     // XP:5.1 Vista:6.0 7:6.1 8:6.2 8.1:6.3
     return parseFloat(version[1]) === 6.1;
   };
-  var BrowserEventTranslator = function (Pointer, Touch, Mouse, Point, TouchAndMouse, EventType, supports, isIOS, isIE, isWindows7) {
+  var BrowserEventTranslator_env_ua_isAndroid = function isAndroid() {
+    var ua = navigator.userAgent;
+    return ua.indexOf('Android') >= 0;
+  };
+  var BrowserEventTranslator = function (Pointer, Touch, Mouse, Point, TouchAndMouse, EventType, supports, isIOS, isIE, isWindows7, isAndroid) {
       /**
        * @typedef BrowserEventTranslator~Options
        * @property {number=} swipeDistance
@@ -1434,6 +1438,10 @@ define('BrowserEventTranslator', [
               throw new Error('MobileSafari(iOS)\u3067TouchEvent\u975E\u30B5\u30DD\u30FC\u30C8\u306F\u304A\u304B\u3057\u3044');
             }
           }
+          // AndroidChrome上ではTouchEventの後でMouseEventも発火してしまうのでTouchAndMouseを返すと問題がある
+          if (isAndroid()) {
+            return Touch;
+          }
           // Win7のIE10/11でもPointerEventが使えるのだがinput type='range'の親要素でsetPointerCapture()するとつまみを動かせなくなるため、
           // Win7のIE10/11ではPointerEventは使わないでおく
           if (isIE() && isWindows7()) {
@@ -1456,6 +1464,6 @@ define('BrowserEventTranslator', [
       BrowserEventTranslator.Point = Point;
       BrowserEventTranslator.EventType = EventType;
       return BrowserEventTranslator;
-    }(BrowserEventTranslator_Pointer, BrowserEventTranslator_Touch, BrowserEventTranslator_Mouse, BrowserEventTranslator_Point, BrowserEventTranslator_TouchAndMouse, BrowserEventTranslator_EventType, BrowserEventTranslator_env_supports, BrowserEventTranslator_env_ua_isIOS, BrowserEventTranslator_env_ua_isIE, BrowserEventTranslator_env_ua_isWindows7);
+    }(BrowserEventTranslator_Pointer, BrowserEventTranslator_Touch, BrowserEventTranslator_Mouse, BrowserEventTranslator_Point, BrowserEventTranslator_TouchAndMouse, BrowserEventTranslator_EventType, BrowserEventTranslator_env_supports, BrowserEventTranslator_env_ua_isIOS, BrowserEventTranslator_env_ua_isIE, BrowserEventTranslator_env_ua_isWindows7, BrowserEventTranslator_env_ua_isAndroid);
   return BrowserEventTranslator;
 });
