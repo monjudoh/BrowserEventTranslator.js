@@ -3,12 +3,12 @@ define('BrowserEventTranslator',
   'BrowserEventTranslator/Pointer','BrowserEventTranslator/Touch','BrowserEventTranslator/Mouse','BrowserEventTranslator/Point','BrowserEventTranslator/TouchAndMouse',
   'BrowserEventTranslator/EventType',
   'BrowserEventTranslator/env/supports',
-  'BrowserEventTranslator/env/ua/isIOS','BrowserEventTranslator/env/ua/isIE','BrowserEventTranslator/env/ua/isWindows7'
+  'BrowserEventTranslator/env/ua/isIOS','BrowserEventTranslator/env/ua/isIE','BrowserEventTranslator/env/ua/isWindows7','BrowserEventTranslator/env/ua/isAndroid'
 ],
 function (Pointer,Touch,Mouse,Point,TouchAndMouse,
           EventType,
           supports,
-          isIOS,isIE,isWindows7) {
+          isIOS,isIE,isWindows7,isAndroid) {
   /**
    * @typedef BrowserEventTranslator~Options
    * @property {number=} swipeDistance
@@ -144,6 +144,10 @@ function (Pointer,Touch,Mouse,Point,TouchAndMouse,
         console.error('MobileSafari(iOS)でTouchEvent非サポートはおかしい');
         throw new Error('MobileSafari(iOS)でTouchEvent非サポートはおかしい');
       }
+    }
+    // AndroidChrome上ではTouchEventの後でMouseEventも発火してしまうのでTouchAndMouseを返すと問題がある
+    if (isAndroid()) {
+      return Touch;
     }
     // Win7のIE10/11でもPointerEventが使えるのだがinput type='range'の親要素でsetPointerCapture()するとつまみを動かせなくなるため、
     // Win7のIE10/11ではPointerEventは使わないでおく
