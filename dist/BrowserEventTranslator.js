@@ -1,6 +1,6 @@
 /**
  * @module BrowserEventTranslator
- * @version 0.01
+ * @version 0.02
  * @author jbking,monjudoh
  * @copyright (c) 2014 jbking,monjudoh<br/>
  * Dual licensed under the MIT (MIT-LICENSE.txt)<br/>
@@ -9,10 +9,9 @@
  * @see BrowserEventTranslator
  */
 define('BrowserEventTranslator', [
-  'jquery',
   'underscore',
   'BeautifulProperties'
-], function (jquery, underscore, BeautifulProperties) {
+], function (underscore, BeautifulProperties) {
   var BrowserEventTranslator_EventType = function () {
       /**
        * @name EventType
@@ -173,11 +172,18 @@ define('BrowserEventTranslator', [
        */
       return EventType;
     }();
-  var BrowserEventTranslator_Base = function ($, _, BeautifulProperties, EventType) {
+  var BrowserEventTranslator_Base = function (_, BeautifulProperties, EventType) {
+      /**
+       * @callback BrowserEventTranslator_Base~DOMEventHandler
+       * @this BrowserEventTranslator
+       * @param {UIEvent} ev
+       * @private
+       * @description <pre>BrowserEventTranslatorにbindされたDOMEventのhandler</pre>
+       */
       /**
        *
        * @param {Element} el
-       * @param {BrowserEventTranslator~options} options
+       * @param {BrowserEventTranslator~Options} options
        * @constructor BrowserEventTranslator_Base
        * @private
        */
@@ -200,6 +206,7 @@ define('BrowserEventTranslator', [
           trace: false,
           tracePrefix: undefined
         });
+        this.options = options;
         _.map(options, function (value, name) {
           BeautifulProperties.Hookable.define(this, name, { value: value });
           BeautifulProperties.Observable.define(this, name);
@@ -215,26 +222,68 @@ define('BrowserEventTranslator', [
         } else {
           this.tracePrefix = '';
         }
-        this._eventSuffix = _.uniqueId('.app_BrowserEventTranslator');
       }
       var proto = Base.prototype;
       BeautifulProperties.Events.provideMethods(proto);
       /**
-       * @function wrapUpInJQEventHandler
+       * @name _DOMEventType2handlers
        * @memberOf BrowserEventTranslator_Base#
-       * @param {function(this:BrowserEventTranslator,UIEvent)} handler DOMEventのhandler
-       * @returns {function}
-       * @description DOMEventのhandlerをラップしてガード込みのjQueryのevent handlerをつくって返す
+       * @see BrowserEventTranslator#el
+       * @private
+       * @description BrowserEventTranslatorでDOM要素(el)に登録した全てのevent handlerをevent type別に抱えておく為の配列の辞書
        */
-      proto.wrapUpInJQEventHandler = function wrapUpInJQEventHandler(handler) {
+      BeautifulProperties.LazyInitializable.define(proto, '_DOMEventType2handlers', {
+        enumerable: false,
+        init: function () {
+          return Object.create(null);
+        }
+      });
+      /**
+       * @function _addDOMEvent
+       * @memberOf BrowserEventTranslator_Base#
+       * @param {string} type event type
+       * @param {BrowserEventTranslator_Base~DOMEventHandler} handler
+       * @see BrowserEventTranslator#el
+       * @private
+       * @description DOMEventのhandlerをラップして、BrowserEventTranslatorにbindされ、ガード込みのhandlerにした上でDOM要素(el)に登録する。
+       */
+      proto._addDOMEvent = function _addDOMEvent(type, handler) {
         var self = this;
-        return function (jqEv) {
-          var ev = jqEv.originalEvent;
+        function wrappedHandler(ev) {
           if (self._preHandleEventGuard(ev)) {
             return;
           }
           handler.call(self, ev);
-        };
+        }
+        var dict = this._DOMEventType2handlers;
+        if (!dict[type]) {
+          dict[type] = [];
+        }
+        dict[type].push(wrappedHandler);
+        this.el.addEventListener(type, wrappedHandler, false);
+      };
+      /**
+       * @function _addEventTrace
+       * @memberOf BrowserEventTranslator_Base#
+       * @param {Array.<string>} types
+       * @param {BrowserEventTranslator_Base~DOMEventHandler} traceHandler log出力用handler
+       * @private
+       * @description typesで指定されたtypeのeventが発火したらlogを出力するようにする
+       */
+      proto._addEventTrace = function _addEventTrace(types, traceHandler) {
+        var addDOMEvent = this._addDOMEvent.bind(this);
+        types.forEach(function (type) {
+          addDOMEvent(type, traceHandler);
+        });
+      };
+      /**
+       * @function _addAllEventTrace
+       * @memberOf BrowserEventTranslator_Base#
+       * @private
+       * @abstract
+       * @description その環境に存在する全てのevent typeについてeventが発火したらlogを出力するようにする
+       */
+      proto._addAllEventTrace = function _addAllEventTrace() {
       };
       /**
        * @function _preHandleEventGuard
@@ -242,7 +291,7 @@ define('BrowserEventTranslator', [
        * @param {UIEvent} ev
        * @returns {boolean} prevented
        * @description 各eventに設定されたhandlerが呼ばれる前のガード。trueを返した場合はhandlerを呼ばない。
-       * @protected
+       * @private
        */
       proto._preHandleEventGuard = function _preHandleEventGuard(ev) {
         if (this.preventDefaultCallback(ev)) {
@@ -311,9 +360,15 @@ define('BrowserEventTranslator', [
         if (this.trace) {
           console.log(this.tracePrefix + 'destroy');
         }
-        var self = this;
-        var eventSuffix = this._eventSuffix;
-        $(self.el).off(eventSuffix);
+        var dict = this._DOMEventType2handlers;
+        var el = this.el;
+        Object.keys(dict).forEach(function (type) {
+          var handlers = dict[type];
+          handlers.forEach(function (handler) {
+            el.removeEventListener(type, handler, false);
+          });
+          handlers.length = 0;
+        });
         this.off();
       };
       function degree(rad) {
@@ -489,7 +544,7 @@ define('BrowserEventTranslator', [
         return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
       }
       return Base;
-    }(jquery, underscore, BeautifulProperties, BrowserEventTranslator_EventType);
+    }(underscore, BeautifulProperties, BrowserEventTranslator_EventType);
   var BrowserEventTranslator_PointInfo = function () {
       /**
        * @constructor BrowserEventTranslator_PointInfo
@@ -621,7 +676,7 @@ define('BrowserEventTranslator', [
       }());
       return supports;
     }();
-  var BrowserEventTranslator_Pointer = function (Base, PointInfo, Point, EventType, supports, $, _) {
+  var BrowserEventTranslator_Pointer = function (Base, PointInfo, Point, EventType, supports, _) {
       var proto = Object.create(Base.prototype);
       proto.constructor = BrowserEventTranslator;
       BrowserEventTranslator.prototype = proto;
@@ -668,31 +723,33 @@ define('BrowserEventTranslator', [
        * @extends BrowserEventTranslator_Base
        *
        * @param {Element} el
-       * @param {BrowserEventTranslator~options} options
+       * @param {BrowserEventTranslator~Options} options
        * @property {object} eventDict key:pointerId,value:PointerEventの辞書。現在このBrowserEventTranslatorでトラッキングされている最中のもの。
        * @private
        */
       function BrowserEventTranslator(el, options) {
         Base.call(this, el, options);
-        var eventSuffix = this._eventSuffix;
         this.pointInfoDict = Object.create(null);
         this.eventDict = Object.create(null);
-        var createCallback = this.wrapUpInJQEventHandler.bind(this);
         this.el.style[symbols['touchAction']] = 'none';
-        this.addEventTrace();
+        var addDOMEvent = this._addDOMEvent.bind(this);
         _(eventHandlers).each(function (handler, type) {
-          $(el).on(symbols[type] + eventSuffix, createCallback(handler));
+          addDOMEvent(symbols[type], handler);
         });
       }
-      proto.addEventTrace = function addEventTrace() {
-        if (this.trace) {
-          var el = this.el;
-          var eventSuffix = this._eventSuffix;
-          var createCallback = this.wrapUpInJQEventHandler.bind(this);
-          events.forEach(function (type) {
-            $(el).on(symbols[type] + eventSuffix, createCallback(function (ev) {
-              console.log(this.tracePrefix + ev.type, ev.pointerId, this.pointsFromEvent(ev).length, ev);
-            }));
+      /**
+       * @function _addAllEventTrace
+       * @memberOf BrowserEventTranslator_Pointer#
+       * @override
+       * @private
+       * @see BrowserEventTranslator_Base#_addAllEventTrace
+       */
+      proto._addAllEventTrace = function _addAllEventTrace() {
+        if (this.options.trace) {
+          this._addEventTrace(events.map(function (type) {
+            return symbols[type];
+          }), function (ev) {
+            console.log(this.tracePrefix + ev.type, ev.pointerId, this.pointsFromEvent(ev).length, ev);
           });
         }
       };
@@ -816,8 +873,8 @@ define('BrowserEventTranslator', [
         this.stopPointerTracking(ev);
       };
       return BrowserEventTranslator;
-    }(BrowserEventTranslator_Base, BrowserEventTranslator_PointInfo, BrowserEventTranslator_Point, BrowserEventTranslator_EventType, BrowserEventTranslator_env_supports, jquery, underscore);
-  var BrowserEventTranslator_Touch = function (Base, PointInfo, Point, EventType, $, _) {
+    }(BrowserEventTranslator_Base, BrowserEventTranslator_PointInfo, BrowserEventTranslator_Point, BrowserEventTranslator_EventType, BrowserEventTranslator_env_supports, underscore);
+  var BrowserEventTranslator_Touch = function (Base, PointInfo, Point, EventType, _) {
       var proto = Object.create(Base.prototype);
       proto.constructor = BrowserEventTranslator;
       BrowserEventTranslator.prototype = proto;
@@ -842,35 +899,36 @@ define('BrowserEventTranslator', [
        * @extends BrowserEventTranslator_Base
        *
        * @param {Element} el
-       * @param {BrowserEventTranslator~options} options
+       * @param {BrowserEventTranslator~Options} options
        * @property {object} pointInfoDict key:identifier,value:pointInfoの辞書。現在このBrowserEventTranslatorでトラッキングされている最中のもの。
        * @private
        */
       function BrowserEventTranslator(el, options) {
         Base.call(this, el, options);
-        var eventSuffix = this._eventSuffix;
         this.pointInfoDict = Object.create(null);
-        var createCallback = this.wrapUpInJQEventHandler.bind(this);
-        this.addEventTrace();
+        this._addAllEventTrace();
+        var addDOMEvent = this._addDOMEvent.bind(this);
         _(eventHandlers).each(function (handler, type) {
-          $(el).on(type + eventSuffix, createCallback(handler));
+          addDOMEvent(type, handler);
         });
         if (this.trace) {
           console.log(this.tracePrefix + 'setup done');
         }
       }
-      proto.addEventTrace = function addEventTrace() {
-        if (this.trace) {
-          var el = this.el;
-          var eventSuffix = this._eventSuffix;
-          var createCallback = this.wrapUpInJQEventHandler.bind(this);
-          events.forEach(function (type) {
-            $(el).on(type + eventSuffix, createCallback(function (ev) {
-              var identifiers = Array_from(ev.touches).map(function (touch) {
-                  return touch.identifier;
-                });
-              console.log(this.tracePrefix + ev.type, identifiers, ev);
-            }));
+      /**
+       * @function _addAllEventTrace
+       * @memberOf BrowserEventTranslator_Touch#
+       * @override
+       * @private
+       * @see BrowserEventTranslator_Base#_addAllEventTrace
+       */
+      proto._addAllEventTrace = function _addAllEventTrace() {
+        if (this.options.trace) {
+          this._addEventTrace(events, function (ev) {
+            var identifiers = Array_from(ev.touches).map(function (touch) {
+                return touch.identifier;
+              });
+            console.log(this.tracePrefix + ev.type, identifiers, ev);
           });
         }
       };
@@ -1006,8 +1064,8 @@ define('BrowserEventTranslator', [
         }
       }
       return BrowserEventTranslator;
-    }(BrowserEventTranslator_Base, BrowserEventTranslator_PointInfo, BrowserEventTranslator_Point, BrowserEventTranslator_EventType, jquery, underscore);
-  var BrowserEventTranslator_Mouse = function (Base, PointInfo, Point, EventType, $, _) {
+    }(BrowserEventTranslator_Base, BrowserEventTranslator_PointInfo, BrowserEventTranslator_Point, BrowserEventTranslator_EventType, underscore);
+  var BrowserEventTranslator_Mouse = function (Base, PointInfo, Point, EventType, _) {
       var proto = Object.create(Base.prototype);
       proto.constructor = BrowserEventTranslator;
       BrowserEventTranslator.prototype = proto;
@@ -1026,28 +1084,29 @@ define('BrowserEventTranslator', [
        * @extends BrowserEventTranslator_Base
        *
        * @param {Element} el
-       * @param {BrowserEventTranslator~options} options
+       * @param {BrowserEventTranslator~Options} options
        * @property {BrowserEventTranslator_PointInfo} pointInfo
        * @private
        */
       function BrowserEventTranslator(el, options) {
         Base.call(this, el, options);
-        var eventSuffix = this._eventSuffix;
-        var createCallback = this.wrapUpInJQEventHandler.bind(this);
-        this.addEventTrace();
+        this._addAllEventTrace();
+        var addDOMEvent = this._addDOMEvent.bind(this);
         _(eventHandlers).each(function (handler, type) {
-          $(el).on(type + eventSuffix, createCallback(handler));
+          addDOMEvent(type, handler);
         });
       }
-      proto.addEventTrace = function addEventTrace() {
-        if (this.trace) {
-          var el = this.el;
-          var eventSuffix = this._eventSuffix;
-          var createCallback = this.wrapUpInJQEventHandler.bind(this);
-          events.forEach(function (type) {
-            $(el).on(type + eventSuffix, createCallback(function (ev) {
-              console.log(this.tracePrefix + ev.type, ev);
-            }));
+      /**
+       * @function _addAllEventTrace
+       * @memberOf BrowserEventTranslator_Mouse#
+       * @override
+       * @private
+       * @see BrowserEventTranslator_Base#_addAllEventTrace
+       */
+      proto._addAllEventTrace = function _addAllEventTrace() {
+        if (this.options.trace) {
+          this._addEventTrace(events, function (ev) {
+            console.log(this.tracePrefix + ev.type, ev);
           });
         }
       };
@@ -1141,8 +1200,8 @@ define('BrowserEventTranslator', [
         this.trigger(EventType.pointerup, ev, points);
       };
       return BrowserEventTranslator;
-    }(BrowserEventTranslator_Base, BrowserEventTranslator_PointInfo, BrowserEventTranslator_Point, BrowserEventTranslator_EventType, jquery, underscore);
-  var BrowserEventTranslator_TouchAndMouse = function (Base, Touch, Mouse, $, _) {
+    }(BrowserEventTranslator_Base, BrowserEventTranslator_PointInfo, BrowserEventTranslator_Point, BrowserEventTranslator_EventType, underscore);
+  var BrowserEventTranslator_TouchAndMouse = function (Base, Touch, Mouse, _) {
       var proto = Object.create(Base.prototype);
       proto.constructor = BrowserEventTranslator;
       BrowserEventTranslator.prototype = proto;
@@ -1162,18 +1221,17 @@ define('BrowserEventTranslator', [
        * @see BrowserEventTranslator_Mouse
        *
        * @param {Element} el
-       * @param {BrowserEventTranslator~options} options
+       * @param {BrowserEventTranslator~Options} options
        * @private
        */
       function BrowserEventTranslator(el, options) {
         Base.call(this, el, options);
-        var eventSuffix = this._eventSuffix;
         this.pointInfoDict = Object.create(null);
-        var createCallback = this.wrapUpInJQEventHandler.bind(this);
-        touchProto.addEventTrace.call(this);
-        mouseProto.addEventTrace.call(this);
+        touchProto._addAllEventTrace.call(this);
+        mouseProto._addAllEventTrace.call(this);
+        var addDOMEvent = this._addDOMEvent.bind(this);
         _(eventHandlers).each(function (handler, type) {
-          $(el).on(type + eventSuffix, createCallback(handler));
+          addDOMEvent(type, handler);
         });
       }
       /**
@@ -1213,7 +1271,7 @@ define('BrowserEventTranslator', [
         }
       };
       return BrowserEventTranslator;
-    }(BrowserEventTranslator_Base, BrowserEventTranslator_Touch, BrowserEventTranslator_Mouse, jquery, underscore);
+    }(BrowserEventTranslator_Base, BrowserEventTranslator_Touch, BrowserEventTranslator_Mouse, underscore);
   var BrowserEventTranslator_env_ua_isIOS = function isIOS() {
     var ua = navigator.userAgent;
     return ua.indexOf('like Mac OS X') >= 0;
@@ -1241,7 +1299,7 @@ define('BrowserEventTranslator', [
   };
   var BrowserEventTranslator = function (Pointer, Touch, Mouse, Point, TouchAndMouse, EventType, supports, isIOS, isIE, isWindows7) {
       /**
-       * @typedef BrowserEventTranslator~options
+       * @typedef BrowserEventTranslator~Options
        * @property {number=} swipeDistance
        * @property {number=} swipeTimeLimit
        * @property {number=} dontSlideDistance
@@ -1267,6 +1325,17 @@ define('BrowserEventTranslator', [
        * @callback BrowserEventTranslator~StopPropagationCallback
        * @param {UIEvent} ev
        * @returns {boolean} trueを返せばev.stopPropagation()が呼ばれるようになる
+       */
+      /**
+       * @name el
+       * @memberOf BrowserEventTranslator#
+       * @type Element
+       * @description event変換の対象となるDOM要素
+       */
+      /**
+       * @name options
+       * @memberOf BrowserEventTranslator#
+       * @type BrowserEventTranslator~Options
        */
       /**
        * @name swipeDistance
