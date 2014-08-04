@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: BrowserEventTranslator/Mouse.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: BrowserEventTranslator/Mouse.js</h1>
+
+    
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>define(
+  'BrowserEventTranslator/Mouse',
+  [
+    'BrowserEventTranslator/Base','BrowserEventTranslator/PointInfo',
+    'BrowserEventTranslator/Point','BrowserEventTranslator/EventType',
+    'underscore'
+  ],
+  function (Base,PointInfo,
+            Point,EventType,
+            _) {
+    var proto = Object.create(Base.prototype);
+    proto.constructor = BrowserEventTranslator;
+    BrowserEventTranslator.prototype = proto;
+
+    var events = 'click contextmenu dblclick mousedown mouseenter mouseleave mousemove mouseout mouseover mouseup show'.split(' ');
+    var eventHandlers = Object.create(null);
+    /**
+     *
+     * @namespace eventHandlers
+     * @memberOf BrowserEventTranslator_Mouse
+     * @description BrowserEventTranslator_Mouseで設定するMouseEventのevent handler
+     * @private
+     */
+    BrowserEventTranslator.eventHandlers = eventHandlers;
+
+    /**
+     * @constructor BrowserEventTranslator_Mouse
+     * @extends BrowserEventTranslator_Base
+     *
+     * @param {Element} el
+     * @param {BrowserEventTranslator~Options} options
+     * @property {BrowserEventTranslator_PointInfo} pointInfo
+     * @private
+     */
+    function BrowserEventTranslator(el, options) {
+      Base.call(this,el,options);
+      this._addAllEventTrace();
+      var addDOMEvent = this._addDOMEvent.bind(this);
+      _(eventHandlers).each(function(handler,type){
+        addDOMEvent(type,handler);
+      });
+    }
+    /**
+     * @function _addAllEventTrace
+     * @memberOf BrowserEventTranslator_Mouse#
+     * @override
+     * @private
+     * @see BrowserEventTranslator_Base#_addAllEventTrace
+     */
+    proto._addAllEventTrace = function _addAllEventTrace() {
+      if (this.options.trace) {
+        this._addEventTrace(events,function (ev) {
+          console.log(this.tracePrefix + ev.type,ev);
+        });
+      }
+    };
+
+    /**
+     * @memberOf BrowserEventTranslator_Mouse.eventHandlers
+     * @function mousedown
+     * @param {MouseEvent} ev
+     */
+    eventHandlers.mousedown = function mousedown(ev) {
+      this.setUpPointerTracking(ev);
+      var points = this.pointsFromEvent(ev);
+      this.trigger(EventType.pointerdown, ev, points);
+    };
+    /**
+     * @function pointsFromEvent
+     * @memberOf BrowserEventTranslator_Mouse#
+     * @override
+     * @see BrowserEventTranslator_Base#pointsFromEvent
+     *
+     * @param {MouseEvent} ev
+     */
+    proto.pointsFromEvent = function pointsFromEvent(ev) {
+      return this.pointInfo ? [Point.fromEvent(ev)] : [];
+    };
+    /**
+     * @function stopPointerTracking
+     * @memberOf BrowserEventTranslator_Mouse#
+     * @override
+     * @see BrowserEventTranslator_Base#stopPointerTracking
+     *
+     * @param {MouseEvent} ev
+     * @returns {BrowserEventTranslator_PointInfo}
+     */
+    proto.stopPointerTracking = function stopPointerTracking (ev) {
+      if (this.trace) {
+        console.log(this.tracePrefix + 'stopPointerTracking');
+      }
+      var pointInfo = this.pointInfo;
+      delete this.pointInfo;
+      return pointInfo;
+    };
+
+    /**
+     * @function setUpPointerTracking
+     * @memberOf BrowserEventTranslator_Mouse#
+     * @override
+     * @see BrowserEventTranslator_Base#setUpPointerTracking
+     *
+     * @param {MouseEvent} ev
+     */
+    proto.setUpPointerTracking = function (ev) {
+      if (this.trace) {
+        console.log(this.tracePrefix + 'setUpPointerTracking');
+      }
+      this.pointInfo = new PointInfo(Point.fromEvent(ev));
+    };
+    /**
+     * @memberOf BrowserEventTranslator_Mouse.eventHandlers
+     * @function mousemove
+     * @param {MouseEvent} ev
+     */
+    eventHandlers.mousemove = function mousemove(ev) {
+      var points = this.pointsFromEvent(ev);
+      this.trackPointer(ev);
+      this.trigger(EventType.pointermove, ev, points);
+    };
+    /**
+     * @function trackPointer
+     * @memberOf BrowserEventTranslator_Mouse#
+     * @override
+     * @see BrowserEventTranslator_Base#trackPointer
+     *
+     * @param {MouseEvent} ev
+     */
+    proto.trackPointer = function (ev) {
+      if (this.trace) {
+        console.log(this.tracePrefix + 'trackPointer');
+      }
+      if (!this.pointInfo) {
+        return;
+      }
+      this.pointInfo.update(Point.fromEvent(ev));
+    };
+    /**
+     * @memberOf BrowserEventTranslator_Mouse.eventHandlers
+     * @function mouseup
+     * @param {MouseEvent} ev
+     */
+    eventHandlers.mouseup = function mouseup(ev) {
+      var points = this.pointsFromEvent(ev);
+      this.finishPointerTracking(ev);
+      this.trigger(EventType.pointerup, ev, points);
+    };
+    return BrowserEventTranslator;
+  }
+);
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="BrowserEventTranslator.html">BrowserEventTranslator</a></li><li><a href="BrowserEventTranslator.Point.html">Point</a></li></ul><h3>Namespaces</h3><ul><li><a href="BrowserEventTranslator.EventType.html">EventType</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha5</a> on Mon Aug 04 2014 18:44:22 GMT+0900 (JST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
