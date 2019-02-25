@@ -2,14 +2,13 @@
   "private": true,
   "devDependencies": {
     "underscore": "~1.6.0",
-    "amdbuilder": "0.0.2",
+    "amdbuilder": "0.0.9",
     "jsdoc": "~3.3.0-alpha5"
   },
-  "scripts" :
-  {
+  "scripts": {
     "build": "node build.js",
-    "docs" : "./node_modules/.bin/jsdoc -r src -d docs/",
-    "docs-inner" : "./node_modules/.bin/jsdoc -r -p src -d docs-inner/",
-    "rst2md" : "pandoc README.rst -s -o README.md"
+    "docs": "./node_modules/.bin/jsdoc -r src -d docs/",
+    "docs-inner": "./node_modules/.bin/jsdoc -r -p src -d docs-inner/",
+    "rst2md": "pandoc README.rst -s -o README.md"
   }
 }
