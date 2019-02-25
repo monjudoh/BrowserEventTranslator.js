@@ -1,14 +1,17 @@
 {
   "private": true,
   "devDependencies": {
-    "underscore": "~1.6.0",
-    "amdbuilder": "0.0.9",
-    "jsdoc": "~3.3.0-alpha5"
+    "amdbuilder": "0.0.11",
+    "esprima": "^4.0.1",
+    "estraverse": "^4.2.0",
+    "jsdoc": "~3.3.0-alpha5",
+    "underscore": "~1.6.0"
   },
   "scripts": {
-    "build": "node build.js",
+    "build": "rm -rf node_modules/amdclean/node_modules/esprima/;rm -rf node_modules/amdclean/node_modules/estraverse/;node build.js",
     "docs": "./node_modules/.bin/jsdoc -r src -d docs/",
     "docs-inner": "./node_modules/.bin/jsdoc -r -p src -d docs-inner/",
     "rst2md": "pandoc README.rst -s -o README.md"
-  }
+  },
+  "dependencies": {}
 }
