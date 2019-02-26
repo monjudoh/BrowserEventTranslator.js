@@ -9,10 +9,8 @@ define(
   function () {
     const [Base,PointInfo,
       Point,EventType,
-      supports,
       _] = [require('BrowserEventTranslator/Base'),require('BrowserEventTranslator/PointInfo'),
       require('BrowserEventTranslator/Point'),require('BrowserEventTranslator/EventType'),
-      require('BrowserEventTranslator/env/supports'),
       require('underscore')];
     var proto = Object.create(Base.prototype);
     proto.constructor = BrowserEventTranslator;
@@ -21,27 +19,10 @@ define(
     var events = 'pointerdown pointerup pointercancel pointermove pointerover pointerout pointerenter pointerleave gotpointercapture lostpointercapture'.split(' ');
     (function () {
       symbols = Object.create(null);
-      var properties = 'setPointerCapture releasePointerCapture touchAction'.split(' ');
-      if (supports.PointerEvent) {
-        _([events,properties]).flatten().forEach(function(key) {
-          symbols[key] = key;
-        });
-      } else if (supports.MSPointerEvent) {
-        events.forEach(function(key){
-          symbols[key] = key.replace(/pointer(.)/,function($0,$1){
-            return 'Pointer'+$1.toUpperCase();
-          }).replace(/^./,function($0){
-            return 'MS' + $0.toUpperCase();
-          });
-        });
-        properties.forEach(function(key){
-          symbols[key] = key.replace(/pointer(.)/,function($0,$1){
-            return 'Pointer'+$1.toUpperCase();
-          }).replace(/^./,function($0){
-            return 'ms' + $0.toUpperCase();
-          });
-        });
-      }
+      const properties = 'setPointerCapture releasePointerCapture touchAction'.split(' ');
+      _([events,properties]).flatten().forEach(function(key) {
+        symbols[key] = key;
+      });
     })();
     var eventHandlers = Object.create(null);
     /**

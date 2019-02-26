@@ -158,7 +158,7 @@ function () {
     if (isIE() && isWindows7()) {
       return Mouse;
     }
-    if (supports.PointerEvent || supports.MSPointerEvent) {
+    if (supports.PointerEvent) {
       return Pointer;
     }
     // タッチパネル+マウスを搭載したマシンとWin8+でのGoogle Chrome等MouseEvent/TouchEvent両サポート環境
