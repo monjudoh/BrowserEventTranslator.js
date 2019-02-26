@@ -15,12 +15,6 @@ define('BrowserEventTranslator/Touch',
     var proto = Object.create(Base.prototype);
     proto.constructor = BrowserEventTranslator;
     BrowserEventTranslator.prototype = proto;
-    var Array_from = (function () {
-      return function(arrayLike) {
-        var slice = Array.prototype.slice;
-        return slice.call(arrayLike);
-      };
-    })();
     var events = 'touchstart touchend touchmove touchenter touchleave touchcancel'.split(' ');
     var eventHandlers = Object.create(null);
     /**
@@ -62,7 +56,7 @@ define('BrowserEventTranslator/Touch',
     proto._addAllEventTrace = function _addAllEventTrace() {
       if (this.options.trace) {
         this._addEventTrace(events,function (ev) {
-          var identifiers = Array_from(ev.touches).map(function(touch){
+          var identifiers = Array.from(ev.touches).map(function(touch){
             return touch.identifier;
           });
           console.log(this.tracePrefix + ev.type,identifiers,ev);
@@ -89,7 +83,7 @@ define('BrowserEventTranslator/Touch',
      * @param {TouchEvent} ev
      */
     proto.pointsFromEvent = function pointsFromEvent(ev) {
-      return Array_from(ev.touches).map(Point.fromTouch);;
+      return Array.from(ev.touches).map(Point.fromTouch);;
     };
 
     /**
@@ -106,7 +100,7 @@ define('BrowserEventTranslator/Touch',
         console.log(this.tracePrefix + 'stopPointerTracking',ev);
       }
       var pointInfoDict = this.pointInfoDict;
-      var identifiers4remove = _.difference(Object.keys(pointInfoDict),Array_from(ev.touches).map(function(touch){
+      var identifiers4remove = _.difference(Object.keys(pointInfoDict),Array.from(ev.touches).map(function(touch){
         return touch.identifier;
       }));
       var removed = identifiers4remove.map(function(identifier){
@@ -133,7 +127,7 @@ define('BrowserEventTranslator/Touch',
         console.log(this.tracePrefix + 'setUpPointerTracking',ev);
       }
       var pointInfoDict = this.pointInfoDict;
-      var touches = Array_from(ev.touches);
+      var touches = Array.from(ev.touches);
       var identifier2touch = Object.create(null);
       touches.forEach(function(touch){
         identifier2touch[touch.identifier] = touch;
@@ -175,7 +169,7 @@ define('BrowserEventTranslator/Touch',
       var pointInfoDict = this.pointInfoDict;
       // 接地点の移動と接地点の追加が同時に起こった場合、例えば指を動かしながらもう一本の指で触れる等した場合、
       // touchstartとtouchesの個数が増えた状態でのtouchmoveのどちらが先に起こるか分からない
-      Array_from(ev.touches).forEach(function(touch){
+      Array.from(ev.touches).forEach(function(touch){
         if (pointInfoDict[touch.identifier]) {
           pointInfoDict[touch.identifier].update(Point.fromTouch(touch));
         }
