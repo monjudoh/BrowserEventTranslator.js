@@ -2,15 +2,12 @@ define(
   'BrowserEventTranslator/Mouse',
   [
     'BrowserEventTranslator/Base','BrowserEventTranslator/PointInfo',
-    'BrowserEventTranslator/Point','BrowserEventTranslator/EventType',
-    'underscore'
+    'BrowserEventTranslator/Point','BrowserEventTranslator/EventType'
   ],
   function () {
     const [Base,PointInfo,
-      Point,EventType,
-      _] = [require('BrowserEventTranslator/Base'),require('BrowserEventTranslator/PointInfo'),
-      require('BrowserEventTranslator/Point'),require('BrowserEventTranslator/EventType'),
-      require('underscore')];
+      Point,EventType] = [require('BrowserEventTranslator/Base'),require('BrowserEventTranslator/PointInfo'),
+      require('BrowserEventTranslator/Point'),require('BrowserEventTranslator/EventType')];
 
     const events = 'click contextmenu dblclick mousedown mouseenter mouseleave mousemove mouseout mouseover mouseup show'.split(' ');
     const eventHandlers = Object.create(null);
@@ -27,10 +24,11 @@ define(
       constructor(el, options) {
         super(el,options);
         this._addAllEventTrace();
-        const addDOMEvent = this._addDOMEvent.bind(this);
-        _(eventHandlers).each(function(handler,type){
-          addDOMEvent(type,handler);
-        });
+        const types = Object.keys(eventHandlers);
+        for (const type of types) {
+          const handler = eventHandlers[type];
+          this._addDOMEvent(type,handler);
+        }
       }
       /**
        * @function _addAllEventTrace
