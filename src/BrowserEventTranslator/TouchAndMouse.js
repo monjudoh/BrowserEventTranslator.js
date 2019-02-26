@@ -4,10 +4,13 @@ define('BrowserEventTranslator/TouchAndMouse',
   'BrowserEventTranslator/Touch','BrowserEventTranslator/Mouse',
   'underscore'
 ]
-,function (Base,
-           Touch,Mouse,
-           _) {
+,function () {
   "use strict";
+  const [Base,
+    Touch,Mouse,
+    _] = [require('BrowserEventTranslator/Base'),
+    require('BrowserEventTranslator/Touch'),require('BrowserEventTranslator/Mouse'),
+    require('underscore')];
   var proto = Object.create(Base.prototype);
   proto.constructor = BrowserEventTranslator;
   BrowserEventTranslator.prototype = proto;

@@ -5,10 +5,14 @@ define('BrowserEventTranslator',
   'BrowserEventTranslator/env/supports',
   'BrowserEventTranslator/env/ua/isIOS','BrowserEventTranslator/env/ua/isIE','BrowserEventTranslator/env/ua/isWindows7','BrowserEventTranslator/env/ua/isAndroid'
 ],
-function (Pointer,Touch,Mouse,Point,TouchAndMouse,
-          EventType,
-          supports,
-          isIOS,isIE,isWindows7,isAndroid) {
+function () {
+  const [Pointer,Touch,Mouse,Point,TouchAndMouse,
+    EventType,
+    supports,
+    isIOS,isIE,isWindows7,isAndroid] = [require('BrowserEventTranslator/Pointer'),require('BrowserEventTranslator/Touch'),require('BrowserEventTranslator/Mouse'),require('BrowserEventTranslator/Point'),require('BrowserEventTranslator/TouchAndMouse')
+    ,require('BrowserEventTranslator/EventType'),
+    require('BrowserEventTranslator/env/supports'),
+    require('BrowserEventTranslator/env/ua/isIOS'),require('BrowserEventTranslator/env/ua/isIE'),require('BrowserEventTranslator/env/ua/isWindows7'),require('BrowserEventTranslator/env/ua/isAndroid')];
   /**
    * @typedef BrowserEventTranslator~Options
    * @property {number=} swipeDistance

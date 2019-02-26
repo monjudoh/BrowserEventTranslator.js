@@ -4,10 +4,14 @@ define('BrowserEventTranslator/Touch',
     'BrowserEventTranslator/Point','BrowserEventTranslator/EventType',
     'underscore'
   ],
-  function (Base,PointInfo,
-            Point,EventType,
-            _) {
+  function () {
     "use strict";
+    const [Base,PointInfo,
+    Point,EventType,
+    _] = [require('BrowserEventTranslator/Base'),require('BrowserEventTranslator/PointInfo'),
+    require('BrowserEventTranslator/Point'),require('BrowserEventTranslator/EventType'),
+    require('underscore')];
+    
     var proto = Object.create(Base.prototype);
     proto.constructor = BrowserEventTranslator;
     BrowserEventTranslator.prototype = proto;

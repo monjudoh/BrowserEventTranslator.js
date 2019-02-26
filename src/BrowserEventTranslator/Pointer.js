@@ -6,10 +6,14 @@ define(
     'BrowserEventTranslator/env/supports',
     'underscore'
   ],
-  function (Base,PointInfo,
-            Point,EventType,
-            supports,
-            _) {
+  function () {
+    const [Base,PointInfo,
+      Point,EventType,
+      supports,
+      _] = [require('BrowserEventTranslator/Base'),require('BrowserEventTranslator/PointInfo'),
+      require('BrowserEventTranslator/Point'),require('BrowserEventTranslator/EventType'),
+      require('BrowserEventTranslator/env/supports'),
+      require('underscore')];
     var proto = Object.create(Base.prototype);
     proto.constructor = BrowserEventTranslator;
     BrowserEventTranslator.prototype = proto;

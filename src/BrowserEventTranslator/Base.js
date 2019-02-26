@@ -1,6 +1,7 @@
 define('BrowserEventTranslator/Base',
 ['underscore', 'BeautifulProperties','BrowserEventTranslator/EventType'],
-function (_, BeautifulProperties, EventType) {
+function () {
+  const [_, EventType] = [require('underscore'),require('BrowserEventTranslator/EventType')];
   /**
    * @callback BrowserEventTranslator_Base~DOMEventHandler
    * @this BrowserEventTranslator
