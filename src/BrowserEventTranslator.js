@@ -3,16 +3,16 @@ define('BrowserEventTranslator',
   'BrowserEventTranslator/Pointer','BrowserEventTranslator/Touch','BrowserEventTranslator/Mouse','BrowserEventTranslator/Point','BrowserEventTranslator/TouchAndMouse',
   'BrowserEventTranslator/EventType',
   'BrowserEventTranslator/env/supports',
-  'BrowserEventTranslator/env/ua/isIOS','BrowserEventTranslator/env/ua/isIE','BrowserEventTranslator/env/ua/isWindows7','BrowserEventTranslator/env/ua/isAndroid'
+  'BrowserEventTranslator/env/ua/isIOS','BrowserEventTranslator/env/ua/isAndroid'
 ],
 function () {
   const [Pointer,Touch,Mouse,Point,TouchAndMouse,
     EventType,
     supports,
-    isIOS,isIE,isWindows7,isAndroid] = [require('BrowserEventTranslator/Pointer'),require('BrowserEventTranslator/Touch'),require('BrowserEventTranslator/Mouse'),require('BrowserEventTranslator/Point'),require('BrowserEventTranslator/TouchAndMouse')
+    isIOS,isAndroid] = [require('BrowserEventTranslator/Pointer'),require('BrowserEventTranslator/Touch'),require('BrowserEventTranslator/Mouse'),require('BrowserEventTranslator/Point'),require('BrowserEventTranslator/TouchAndMouse')
     ,require('BrowserEventTranslator/EventType'),
     require('BrowserEventTranslator/env/supports'),
-    require('BrowserEventTranslator/env/ua/isIOS'),require('BrowserEventTranslator/env/ua/isIE'),require('BrowserEventTranslator/env/ua/isWindows7'),require('BrowserEventTranslator/env/ua/isAndroid')];
+    require('BrowserEventTranslator/env/ua/isIOS'),require('BrowserEventTranslator/env/ua/isAndroid')];
   /**
    * @typedef BrowserEventTranslator~Options
    * @property {number=} swipeDistance
@@ -152,11 +152,6 @@ function () {
     // AndroidChrome上ではTouchEventの後でMouseEventも発火してしまうのでTouchAndMouseを返すと問題がある
     if (isAndroid()) {
       return Touch;
-    }
-    // Win7のIE10/11でもPointerEventが使えるのだがinput type='range'の親要素でsetPointerCapture()するとつまみを動かせなくなるため、
-    // Win7のIE10/11ではPointerEventは使わないでおく
-    if (isIE() && isWindows7()) {
-      return Mouse;
     }
     if (supports.PointerEvent) {
       return Pointer;
