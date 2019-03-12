@@ -8,23 +8,10 @@ define(
   ],
   function () {
     const [Base,PointInfo,
-      Point,EventType,
-      _] = [require('BrowserEventTranslator/Base'),require('BrowserEventTranslator/PointInfo'),
-      require('BrowserEventTranslator/Point'),require('BrowserEventTranslator/EventType'),
-      require('underscore')];
-    var proto = Object.create(Base.prototype);
-    proto.constructor = BrowserEventTranslator;
-    BrowserEventTranslator.prototype = proto;
-    var symbols;
-    var events = 'pointerdown pointerup pointercancel pointermove pointerover pointerout pointerenter pointerleave gotpointercapture lostpointercapture'.split(' ');
-    (function () {
-      symbols = Object.create(null);
-      const properties = 'setPointerCapture releasePointerCapture touchAction'.split(' ');
-      _([events,properties]).flatten().forEach(function(key) {
-        symbols[key] = key;
-      });
-    })();
-    var eventHandlers = Object.create(null);
+      Point,EventType] = [require('BrowserEventTranslator/Base'),require('BrowserEventTranslator/PointInfo'),
+      require('BrowserEventTranslator/Point'),require('BrowserEventTranslator/EventType')];
+    const events = 'pointerdown pointerup pointercancel pointermove pointerover pointerout pointerenter pointerleave gotpointercapture lostpointercapture'.split(' ');
+    const eventHandlers = Object.create(null);
     /**
      *
      * @namespace eventHandlers
@@ -43,100 +30,119 @@ define(
      * @property {object} eventDict key:pointerId,value:PointerEventの辞書。現在このBrowserEventTranslatorでトラッキングされている最中のもの。
      * @private
      */
-    function BrowserEventTranslator(el, options) {
-      Base.call(this,el,options);
-      this.pointInfoDict = Object.create(null);
-      this.eventDict = Object.create(null);
-      this.el.style[symbols['touchAction']] = 'none';
-      var addDOMEvent = this._addDOMEvent.bind(this);
-      _(eventHandlers).each(function(handler,type){
-        addDOMEvent(symbols[type],handler);
-      });
-    }
-    /**
-     * @function _addAllEventTrace
-     * @memberOf BrowserEventTranslator_Pointer#
-     * @override
-     * @private
-     * @see BrowserEventTranslator_Base#_addAllEventTrace
-     */
-    proto._addAllEventTrace = function _addAllEventTrace() {
-      if (this.options.trace) {
-        this._addEventTrace(events.map(function(type){
-          return symbols[type];
-        }),function (ev) {
-          console.log(this.tracePrefix + ev.type,ev.pointerId,this.pointsFromEvent(ev).length,ev);
-        });
+    class BrowserEventTranslator extends Base {
+      constructor(el, options) {
+        super(el, options);
+        this.pointInfoDict = Object.create(null);
+        this.eventDict = Object.create(null);
+        this.el.style.touchAction = 'none';
+        const types = Object.keys(eventHandlers);
+        for (const type of types) {
+          const handler = eventHandlers[type];
+          this._addDOMEvent(type,handler);
+        }
       }
-    };
+      /**
+       * @function _addAllEventTrace
+       * @memberOf BrowserEventTranslator_Pointer#
+       * @override
+       * @private
+       * @see BrowserEventTranslator_Base#_addAllEventTrace
+       */
+      _addAllEventTrace() {
+        if (this.options.trace) {
+          this._addEventTrace(events,function (ev) {
+            console.log(this.tracePrefix + ev.type,ev.pointerId,this.pointsFromEvent(ev).length,ev);
+          });
+        }
+      }
+      /**
+       * @function pointsFromEvent
+       * @memberOf BrowserEventTranslator_Pointer#
+       * @override
+       * @see BrowserEventTranslator_Base#pointsFromEvent
+       *
+       * @param {PointerEvent} ev
+       */
+      pointsFromEvent(ev) {
+        const pointInfoDict = this.pointInfoDict;
+        const eventDict = this.eventDict;
+        // 古いものから順に並べられたpointerId
+        const sortedPointerIds = Object.keys(pointInfoDict).map((pointerId)=>{
+          const pointInfo = pointInfoDict[pointerId];
+          return {at:pointInfo.at,id:pointerId};
+        })
+        .sort((a,b)=>b - a)
+        .map((dict)=>dict.id);
+        const evs = sortedPointerIds.map((id)=>eventDict[id]).filter((ev)=>!!ev);
+        return evs.map(Point.fromEvent);
+      }
+      /**
+       * @function stopPointerTracking
+       * @memberOf BrowserEventTranslator_Pointer#
+       * @override
+       * @see BrowserEventTranslator_Base#stopPointerTracking
+       *
+       * @param {PointerEvent} ev
+       * @returns {BrowserEventTranslator_PointInfo}
+       */
+      stopPointerTracking (ev) {
+        if (this.trace) {
+          console.log(this.tracePrefix + 'stopPointerTracking',ev.pointerId);
+        }
+        const pointInfo = this.pointInfoDict[ev.pointerId];
+        delete this.pointInfoDict[ev.pointerId];
+        delete this.eventDict[ev.pointerId];
+        return pointInfo;
+      }
+      /**
+       * @function setUpPointerTracking
+       * @memberOf BrowserEventTranslator_Pointer#
+       * @override
+       * @see BrowserEventTranslator_Base#setUpPointerTracking
+       *
+       * @param {PointerEvent} ev
+       */
+      setUpPointerTracking(ev) {
+        if (this.trace) {
+          console.log(this.tracePrefix + 'setUpPointerTracking',ev.pointerId);
+        }
+        this.pointInfoDict[ev.pointerId] = new PointInfo(Point.fromEvent(ev));
+        this.eventDict[ev.pointerId] = ev;
+      }
+      /**
+       * @function trackPointer
+       * @memberOf BrowserEventTranslator_Pointer#
+       * @override
+       * @see BrowserEventTranslator_Base#trackPointer
+       *
+       * @param {PointerEvent} ev
+       */
+      trackPointer(ev) {
+        if (this.trace) {
+          console.log(this.tracePrefix + 'trackPointer',ev.pointerId);
+        }
+        /**
+         * @type {BrowserEventTranslator_PointInfo}
+         */
+        const pointInfo = this.pointInfoDict[ev.pointerId];
+        if (!pointInfo) {
+          return;
+        }
+        pointInfo.update(Point.fromEvent(ev));
+        this.eventDict[ev.pointerId] = ev;
+      }
+    }
 
-    /**
-     * @function pointsFromEvent
-     * @memberOf BrowserEventTranslator_Pointer#
-     * @override
-     * @see BrowserEventTranslator_Base#pointsFromEvent
-     *
-     * @param {PointerEvent} ev
-     */
-    proto.pointsFromEvent = function pointsFromEvent(ev) {
-      var pointInfoDict = this.pointInfoDict;
-      var eventDict = this.eventDict;
-      // 古いものから順に並べられたpointerId
-      var sortedPointerIds = Object.keys(pointInfoDict).map(function(pointerId){
-        var pointInfo = pointInfoDict[pointerId];
-        return {at:pointInfo.at,id:pointerId};
-      }).sort(function(a,b){
-        return b - a;
-      }).map(function(dict){
-        return dict.id;
-      });
-      var evs = _.compact(sortedPointerIds.map(function(id){
-        return eventDict[id];
-      }));
-      return evs.map(Point.fromEvent);
-    };
     /**
      * @function pointerdown
      * @memberOf BrowserEventTranslator_Pointer.eventHandlers
      * @param {PointerEvent} ev
      */
     eventHandlers.pointerdown = function pointerdown(ev) {
-      ev.target[symbols.setPointerCapture](ev.pointerId);
+      ev.target.setPointerCapture(ev.pointerId);
       this.setUpPointerTracking(ev);
       this.trigger(EventType.pointerdown, ev, this.pointsFromEvent(ev));
-    };
-    /**
-     * @function stopPointerTracking
-     * @memberOf BrowserEventTranslator_Pointer#
-     * @override
-     * @see BrowserEventTranslator_Base#stopPointerTracking
-     *
-     * @param {PointerEvent} ev
-     * @returns {BrowserEventTranslator_PointInfo}
-     */
-    proto.stopPointerTracking = function stopPointerTracking (ev) {
-      if (this.trace) {
-        console.log(this.tracePrefix + 'stopPointerTracking',ev.pointerId);
-      }
-      var pointInfo = this.pointInfoDict[ev.pointerId];
-      delete this.pointInfoDict[ev.pointerId];
-      delete this.eventDict[ev.pointerId];
-      return pointInfo;
-    };
-    /**
-     * @function setUpPointerTracking
-     * @memberOf BrowserEventTranslator_Pointer#
-     * @override
-     * @see BrowserEventTranslator_Base#setUpPointerTracking
-     *
-     * @param {PointerEvent} ev
-     */
-    proto.setUpPointerTracking = function (ev) {
-      if (this.trace) {
-        console.log(this.tracePrefix + 'setUpPointerTracking',ev.pointerId);
-      }
-      this.pointInfoDict[ev.pointerId] = new PointInfo(Point.fromEvent(ev));
-      this.eventDict[ev.pointerId] = ev;
     };
     /**
      * @function pointermove
@@ -146,29 +152,6 @@ define(
     eventHandlers.pointermove = function pointermove(ev) {
       this.trackPointer(ev);
       this.trigger(EventType.pointermove, ev, this.pointsFromEvent(ev));
-    };
-
-    /**
-     * @function trackPointer
-     * @memberOf BrowserEventTranslator_Pointer#
-     * @override
-     * @see BrowserEventTranslator_Base#trackPointer
-     *
-     * @param {PointerEvent} ev
-     */
-    proto.trackPointer = function (ev) {
-      if (this.trace) {
-        console.log(this.tracePrefix + 'trackPointer',ev.pointerId);
-      }
-      /**
-       * @type {BrowserEventTranslator_PointInfo}
-       */
-      var pointInfo = this.pointInfoDict[ev.pointerId];
-      if (!pointInfo) {
-        return;
-      }
-      pointInfo.update(Point.fromEvent(ev));
-      this.eventDict[ev.pointerId] = ev;
     };
     /**
      * @function pointerup
