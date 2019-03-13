@@ -1,6 +1,6 @@
 define('BrowserEventTranslator/PointInfo',function () {
   /**
-   * @constructor BrowserEventTranslator_PointInfo
+   * @class BrowserEventTranslator_PointInfo
    *
    * @param {BrowserEventTranslator_Point} point
    *
@@ -10,18 +10,19 @@ define('BrowserEventTranslator/PointInfo',function () {
    * @property {number} at 作成時間
    * @private
    */
-  function PointInfo(point){
-    this.tracking = [];
-    this.update(point);
-    this.start = this.current;
-    this.at = Date.now();
+  class PointInfo {
+    constructor(point){
+      this.tracking = [];
+      this.update(point);
+      this.start = this.current;
+      this.at = Date.now();
+    }
+    update(point) {
+      point.at = Date.now();
+      this.current = point;
+      this.tracking.push(point);
+    }
   }
-  const proto = PointInfo.prototype;
-  proto.update = function update(point) {
-    point.at = Date.now();
-    this.current = point;
-    this.tracking.push(point);
-  };
   /**
    * @constructor BrowserEventTranslator_PointInfo.Point
    * @extends BrowserEventTranslator.Point
