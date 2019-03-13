@@ -94,6 +94,10 @@ define(
         const pointInfo = this.pointInfoDict[ev.pointerId];
         delete this.pointInfoDict[ev.pointerId];
         delete this.eventDict[ev.pointerId];
+        if (this.longPress) {
+          clearTimeout(this.longPress);
+        }
+        delete this.longPress;
         return pointInfo;
       }
       /**
@@ -108,8 +112,21 @@ define(
         if (this.trace) {
           console.log(this.tracePrefix + 'setUpPointerTracking',ev.pointerId);
         }
-        this.pointInfoDict[ev.pointerId] = new PointInfo(Point.fromEvent(ev));
+
+        const pointInfo = new PointInfo(Point.fromEvent(ev));
+        this.pointInfoDict[ev.pointerId] = pointInfo;
         this.eventDict[ev.pointerId] = ev;
+        const longPressIssuer = ()=>{
+          const pointInfoList = Object.keys(this.pointInfoDict).map((key)=>this.pointInfoDict[key]);
+          if (pointInfoList.includes(pointInfo) && this.isNotSlided(pointInfo.start, pointInfo.tracking)) {
+            if (this.trace) {
+              console.log(this.tracePrefix + 'recognize as longPress');
+            }
+            this.trigger(EventType.longPress, pointInfo.current);
+          }
+        };
+        // 長押し計測のスタート
+        this.longPress = setTimeout(longPressIssuer,this.longPressTimeLimit);
       }
       /**
        * @function trackPointer
