@@ -4,7 +4,7 @@ define('BrowserEventTranslator/EventType',function () {
    * @namespace
    * @memberOf BrowserEventTranslator
    */
-  var EventType = {
+  const EventType = {
     swipeLeft: 'controller:event:swipeleft',
     swipeRight: 'controller:event:swiperight',
     swipeUp: 'controller:event:swipeup',

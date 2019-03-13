@@ -2,29 +2,17 @@ define(
   'BrowserEventTranslator/Mouse',
   [
     'BrowserEventTranslator/Base','BrowserEventTranslator/PointInfo',
-    'BrowserEventTranslator/Point','BrowserEventTranslator/EventType',
-    'underscore'
+    'BrowserEventTranslator/Point','BrowserEventTranslator/EventType'
   ],
-  function (Base,PointInfo,
-            Point,EventType,
-            _) {
-    var proto = Object.create(Base.prototype);
-    proto.constructor = BrowserEventTranslator;
-    BrowserEventTranslator.prototype = proto;
+  function () {
+    const [Base,PointInfo,
+      Point,EventType] = [require('BrowserEventTranslator/Base'),require('BrowserEventTranslator/PointInfo'),
+      require('BrowserEventTranslator/Point'),require('BrowserEventTranslator/EventType')];
 
-    var events = 'click contextmenu dblclick mousedown mouseenter mouseleave mousemove mouseout mouseover mouseup show'.split(' ');
-    var eventHandlers = Object.create(null);
+    const events = 'click contextmenu dblclick mousedown mouseenter mouseleave mousemove mouseout mouseover mouseup show'.split(' ');
+    const eventHandlers = Object.create(null);
     /**
-     *
-     * @namespace eventHandlers
-     * @memberOf BrowserEventTranslator_Mouse
-     * @description BrowserEventTranslator_Mouseで設定するMouseEventのevent handler
-     * @private
-     */
-    BrowserEventTranslator.eventHandlers = eventHandlers;
-
-    /**
-     * @constructor BrowserEventTranslator_Mouse
+     * @class BrowserEventTranslator_Mouse
      * @extends BrowserEventTranslator_Base
      *
      * @param {Element} el
@@ -32,29 +20,100 @@ define(
      * @property {BrowserEventTranslator_PointInfo} pointInfo
      * @private
      */
-    function BrowserEventTranslator(el, options) {
-      Base.call(this,el,options);
-      this._addAllEventTrace();
-      var addDOMEvent = this._addDOMEvent.bind(this);
-      _(eventHandlers).each(function(handler,type){
-        addDOMEvent(type,handler);
-      });
-    }
-    /**
-     * @function _addAllEventTrace
-     * @memberOf BrowserEventTranslator_Mouse#
-     * @override
-     * @private
-     * @see BrowserEventTranslator_Base#_addAllEventTrace
-     */
-    proto._addAllEventTrace = function _addAllEventTrace() {
-      if (this.options.trace) {
-        this._addEventTrace(events,function (ev) {
-          console.log(this.tracePrefix + ev.type,ev);
-        });
+    class BrowserEventTranslator extends Base {
+      constructor(el, options) {
+        super(el,options);
+        this._addAllEventTrace();
+        const types = Object.keys(eventHandlers);
+        for (const type of types) {
+          const handler = eventHandlers[type];
+          this._addDOMEvent(type,handler);
+        }
       }
-    };
-
+      /**
+       *
+       * @namespace eventHandlers
+       * @memberOf BrowserEventTranslator_Mouse
+       * @description BrowserEventTranslator_Mouseで設定するMouseEventのevent handler
+       * @private
+       */
+      static get eventHandlers(){
+        return eventHandlers;
+      }
+      /**
+       * @function _addAllEventTrace
+       * @memberOf BrowserEventTranslator_Mouse#
+       * @override
+       * @private
+       * @see BrowserEventTranslator_Base#_addAllEventTrace
+       */
+      _addAllEventTrace() {
+        if (this.options.trace) {
+          this._addEventTrace(events,function (ev) {
+            console.log(this.tracePrefix + ev.type,ev);
+          });
+        }
+      }
+      /**
+       * @function pointsFromEvent
+       * @memberOf BrowserEventTranslator_Mouse#
+       * @override
+       * @see BrowserEventTranslator_Base#pointsFromEvent
+       *
+       * @param {MouseEvent} ev
+       */
+      pointsFromEvent(ev) {
+        return this.pointInfo ? [Point.fromEvent(ev)] : [];
+      }
+      /**
+       * @function stopPointerTracking
+       * @memberOf BrowserEventTranslator_Mouse#
+       * @override
+       * @see BrowserEventTranslator_Base#stopPointerTracking
+       *
+       * @param {MouseEvent} ev
+       * @returns {BrowserEventTranslator_PointInfo}
+       */
+      stopPointerTracking (ev) {
+        if (this.trace) {
+          console.log(this.tracePrefix + 'stopPointerTracking');
+        }
+        const pointInfo = this.pointInfo;
+        delete this.pointInfo;
+        return pointInfo;
+      }
+      /**
+       * @function setUpPointerTracking
+       * @memberOf BrowserEventTranslator_Mouse#
+       * @override
+       * @see BrowserEventTranslator_Base#setUpPointerTracking
+       *
+       * @param {MouseEvent} ev
+       */
+      setUpPointerTracking(ev) {
+        if (this.trace) {
+          console.log(this.tracePrefix + 'setUpPointerTracking');
+        }
+        this.pointInfo = new PointInfo(Point.fromEvent(ev));
+      }
+      /**
+       * @function trackPointer
+       * @memberOf BrowserEventTranslator_Mouse#
+       * @override
+       * @see BrowserEventTranslator_Base#trackPointer
+       *
+       * @param {MouseEvent} ev
+       */
+      trackPointer(ev) {
+        if (this.trace) {
+          console.log(this.tracePrefix + 'trackPointer');
+        }
+        if (!this.pointInfo) {
+          return;
+        }
+        this.pointInfo.update(Point.fromEvent(ev));
+      };
+    }
     /**
      * @memberOf BrowserEventTranslator_Mouse.eventHandlers
      * @function mousedown
@@ -62,51 +121,8 @@ define(
      */
     eventHandlers.mousedown = function mousedown(ev) {
       this.setUpPointerTracking(ev);
-      var points = this.pointsFromEvent(ev);
+      const points = this.pointsFromEvent(ev);
       this.trigger(EventType.pointerdown, ev, points);
-    };
-    /**
-     * @function pointsFromEvent
-     * @memberOf BrowserEventTranslator_Mouse#
-     * @override
-     * @see BrowserEventTranslator_Base#pointsFromEvent
-     *
-     * @param {MouseEvent} ev
-     */
-    proto.pointsFromEvent = function pointsFromEvent(ev) {
-      return this.pointInfo ? [Point.fromEvent(ev)] : [];
-    };
-    /**
-     * @function stopPointerTracking
-     * @memberOf BrowserEventTranslator_Mouse#
-     * @override
-     * @see BrowserEventTranslator_Base#stopPointerTracking
-     *
-     * @param {MouseEvent} ev
-     * @returns {BrowserEventTranslator_PointInfo}
-     */
-    proto.stopPointerTracking = function stopPointerTracking (ev) {
-      if (this.trace) {
-        console.log(this.tracePrefix + 'stopPointerTracking');
-      }
-      var pointInfo = this.pointInfo;
-      delete this.pointInfo;
-      return pointInfo;
-    };
-
-    /**
-     * @function setUpPointerTracking
-     * @memberOf BrowserEventTranslator_Mouse#
-     * @override
-     * @see BrowserEventTranslator_Base#setUpPointerTracking
-     *
-     * @param {MouseEvent} ev
-     */
-    proto.setUpPointerTracking = function (ev) {
-      if (this.trace) {
-        console.log(this.tracePrefix + 'setUpPointerTracking');
-      }
-      this.pointInfo = new PointInfo(Point.fromEvent(ev));
     };
     /**
      * @memberOf BrowserEventTranslator_Mouse.eventHandlers
@@ -114,34 +130,18 @@ define(
      * @param {MouseEvent} ev
      */
     eventHandlers.mousemove = function mousemove(ev) {
-      var points = this.pointsFromEvent(ev);
+      const points = this.pointsFromEvent(ev);
       this.trackPointer(ev);
       this.trigger(EventType.pointermove, ev, points);
     };
-    /**
-     * @function trackPointer
-     * @memberOf BrowserEventTranslator_Mouse#
-     * @override
-     * @see BrowserEventTranslator_Base#trackPointer
-     *
-     * @param {MouseEvent} ev
-     */
-    proto.trackPointer = function (ev) {
-      if (this.trace) {
-        console.log(this.tracePrefix + 'trackPointer');
-      }
-      if (!this.pointInfo) {
-        return;
-      }
-      this.pointInfo.update(Point.fromEvent(ev));
-    };
+
     /**
      * @memberOf BrowserEventTranslator_Mouse.eventHandlers
      * @function mouseup
      * @param {MouseEvent} ev
      */
     eventHandlers.mouseup = function mouseup(ev) {
-      var points = this.pointsFromEvent(ev);
+      const points = this.pointsFromEvent(ev);
       this.finishPointerTracking(ev);
       this.trigger(EventType.pointerup, ev, points);
     };
