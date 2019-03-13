@@ -1,8 +1,7 @@
 define('BrowserEventTranslator/TouchAndMouse',
 [
   'BrowserEventTranslator/Base',
-  'BrowserEventTranslator/Touch','BrowserEventTranslator/Mouse',
-  'underscore'
+  'BrowserEventTranslator/Touch','BrowserEventTranslator/Mouse'
 ]
 ,function () {
   "use strict";

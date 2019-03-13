@@ -3,8 +3,7 @@ define(
   [
     'BrowserEventTranslator/Base','BrowserEventTranslator/PointInfo',
     'BrowserEventTranslator/Point','BrowserEventTranslator/EventType',
-    'BrowserEventTranslator/env/supports',
-    'underscore'
+    'BrowserEventTranslator/env/supports'
   ],
   function () {
     const [Base,PointInfo,
