@@ -31,6 +31,16 @@ define(
         }
       }
       /**
+       *
+       * @namespace eventHandlers
+       * @memberOf BrowserEventTranslator_Mouse
+       * @description BrowserEventTranslator_Mouseで設定するMouseEventのevent handler
+       * @private
+       */
+      static get eventHandlers(){
+        return eventHandlers;
+      }
+      /**
        * @function _addAllEventTrace
        * @memberOf BrowserEventTranslator_Mouse#
        * @override
@@ -135,14 +145,6 @@ define(
       this.finishPointerTracking(ev);
       this.trigger(EventType.pointerup, ev, points);
     };
-    /**
-     *
-     * @namespace eventHandlers
-     * @memberOf BrowserEventTranslator_Mouse
-     * @description BrowserEventTranslator_Mouseで設定するMouseEventのevent handler
-     * @private
-     */
-    BrowserEventTranslator.eventHandlers = eventHandlers;
     return BrowserEventTranslator;
   }
 );

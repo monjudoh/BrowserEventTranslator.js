@@ -11,14 +11,6 @@ define(
       require('BrowserEventTranslator/Point'),require('BrowserEventTranslator/EventType')];
     const events = 'pointerdown pointerup pointercancel pointermove pointerover pointerout pointerenter pointerleave gotpointercapture lostpointercapture'.split(' ');
     const eventHandlers = Object.create(null);
-    /**
-     *
-     * @namespace eventHandlers
-     * @memberOf BrowserEventTranslator_Pointer
-     * @description BrowserEventTranslator_Pointerで設定するPointerEventのevent handler
-     * @private
-     */
-    BrowserEventTranslator.eventHandlers = eventHandlers;
 
     /**
      * @constructor BrowserEventTranslator_Pointer
@@ -40,6 +32,16 @@ define(
           const handler = eventHandlers[type];
           this._addDOMEvent(type,handler);
         }
+      }
+      /**
+       *
+       * @namespace eventHandlers
+       * @memberOf BrowserEventTranslator_Pointer
+       * @description BrowserEventTranslator_Pointerで設定するPointerEventのevent handler
+       * @private
+       */
+      static get eventHandlers(){
+        return eventHandlers;
       }
       /**
        * @function _addAllEventTrace
