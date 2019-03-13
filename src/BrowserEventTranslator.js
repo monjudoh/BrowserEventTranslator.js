@@ -139,7 +139,7 @@ function () {
    * </pre>
    * @see BrowserEventTranslator_Base
    */
-  var BrowserEventTranslator = (function () {
+  const BrowserEventTranslator = (()=>{
     // MobileSafariはMouseEventもサポートしているので他環境と同じ優先順位で振り分けると決して発火しないMouseEvent版になり操作できない
     if (isIOS()) {
       if (supports.TouchEvent) {
