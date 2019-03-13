@@ -149,14 +149,16 @@ function () {
         throw new Error('MobileSafari(iOS)でTouchEvent非サポートはおかしい');
       }
     }
-    // AndroidChrome上ではTouchEventの後でMouseEventも発火してしまうのでTouchAndMouseを返すと問題がある
-    if (isAndroid()) {
-      return Touch;
-    }
     if (supports.PointerEvent) {
       return Pointer;
     }
+    // AndroidChrome上ではTouchEventの後でMouseEventも発火してしまうのでTouchAndMouseを返すと問題がある
+    // (PointerEvent未対応のChrome54以前)
+    if (isAndroid()) {
+      return Touch;
+    }
     // タッチパネル+マウスを搭載したマシンとWin8+でのGoogle Chrome等MouseEvent/TouchEvent両サポート環境
+    // (PointerEvent未対応のChrome54以前)
     if (supports.MouseEvent && supports.TouchEvent) {
       return TouchAndMouse;
     }
