@@ -16,7 +16,7 @@ define('BrowserEventTranslator/PointInfo',function () {
     this.start = this.current;
     this.at = Date.now();
   }
-  var proto = PointInfo.prototype;
+  const proto = PointInfo.prototype;
   proto.update = function update(point) {
     point.at = Date.now();
     this.current = point;

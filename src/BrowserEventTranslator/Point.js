@@ -19,7 +19,7 @@ function(){
    * @description PointerEventないしMouseEventからPoint objectに変換する
    */
   Point.fromEvent = function fromEvent(ev) {
-    var point = new Point();
+    const point = new Point();
     point.x = ev.clientX;
     point.y = ev.clientY;
     return point;
@@ -33,7 +33,7 @@ function(){
    * @description TouchEvent#touchesに格納されているTouchからPoint objectに変換する
    */
   Point.fromTouch = function fromTouch(touch) {
-    var point = new Point();
+    const point = new Point();
     point.x = touch.clientX;
     point.y = touch.clientY;
     return point;
@@ -46,12 +46,12 @@ function(){
    * @description x,yの辞書からPoint objectに変換する
    */
   Point.fromDict = function fromDict(dict) {
-    var point = new Point();
+    const point = new Point();
     point.x = dict.x;
     point.y = dict.y;
     return point;
   };
-  var proto = Point.prototype;
+  const proto = Point.prototype;
   /**
    * @function distance
    * @memberOf BrowserEventTranslator.Point#
@@ -69,7 +69,7 @@ function(){
    * @description 同じ座標情報を持った辞書を返す
    */
   proto.toDict = function toDict(){
-    var dict = Object.create(null);
+    const dict = Object.create(null);
     dict.x = this.x;
     dict.y = this.y;
     return dict;
@@ -81,7 +81,7 @@ function(){
    * @description 自身の複製を返す
    */
   proto.clone = function clone(){
-    var point = new Point();
+    const point = new Point();
     point.x = this.x;
     point.y = this.y;
     return point;

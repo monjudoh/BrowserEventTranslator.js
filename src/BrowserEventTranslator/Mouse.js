@@ -78,7 +78,7 @@ define(
         if (this.trace) {
           console.log(this.tracePrefix + 'stopPointerTracking');
         }
-        var pointInfo = this.pointInfo;
+        const pointInfo = this.pointInfo;
         delete this.pointInfo;
         return pointInfo;
       }
