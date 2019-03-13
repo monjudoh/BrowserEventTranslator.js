@@ -7,10 +7,10 @@ var main = module.exports = function main(options) {
       baseUrl:path.resolve(__dirname, 'src')
     },
     moduleName:'BrowserEventTranslator',
-    exclude:'underscore BeautifulProperties'.split(' '),
+    exclude:'BeautifulProperties'.split(' '),
     distDir:path.resolve(__dirname, 'dist'),
     startBefore: _.template(fs.readFileSync(path.resolve(__dirname, 'copyright.template')).toString())({
-      version:'0.03'
+      version:'0.1.0'
     })
   },function (builtFilePath,code){
 //    console.log(builtFilePath);
