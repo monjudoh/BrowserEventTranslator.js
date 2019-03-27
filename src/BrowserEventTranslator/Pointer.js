@@ -26,7 +26,9 @@ define(
         super(el, options);
         this.pointInfoDict = Object.create(null);
         this.eventDict = Object.create(null);
-        this.el.style.touchAction = 'none';
+        if (this.options.touchAction) {
+          this.el.style.touchAction = this.options.touchAction;
+        }
         const types = Object.keys(eventHandlers);
         for (const type of types) {
           const handler = eventHandlers[type];
