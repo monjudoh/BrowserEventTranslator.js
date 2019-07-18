@@ -189,6 +189,10 @@ define('BrowserEventTranslator/Touch',
       this.finishPointerTracking(ev);
       this.trigger(EventType.pointerup, ev, points);
     };
+    eventHandlers.touchcancel = function touchcancel(ev) {
+      this.stopPointerTracking(ev);
+      this.trigger(EventType.pointercancel, ev);
+    };
     return BrowserEventTranslator;
   }
 );

@@ -14,6 +14,7 @@ define('BrowserEventTranslator/EventType',function () {
     pointerdown: 'controller:event:pointerdown',
     pointermove: 'controller:event:pointermove',
     pointerup: 'controller:event:pointerup',
+    pointercancel: 'controller:event:pointercancel',
     longPress: 'controller:event:longpress'
   };
   Object.freeze(EventType);
