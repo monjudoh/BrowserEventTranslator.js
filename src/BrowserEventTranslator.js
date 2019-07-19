@@ -1,15 +1,15 @@
 define('BrowserEventTranslator',
 [
-  'BrowserEventTranslator/Pointer','BrowserEventTranslator/Touch','BrowserEventTranslator/Point',
+  'BrowserEventTranslator/Pointer','BrowserEventTranslator/Touch','BrowserEventTranslator/Mouse','BrowserEventTranslator/Point',
   'BrowserEventTranslator/EventType',
   'BrowserEventTranslator/env/supports',
   'BrowserEventTranslator/env/ua/isIOS'
 ],
 function () {
-  const [Pointer,Touch,Point,
+  const [Pointer,Touch,Mouse,Point,
     EventType,
     supports,
-    isIOS] = [require('BrowserEventTranslator/Pointer'),require('BrowserEventTranslator/Touch'),require('BrowserEventTranslator/Point'),
+    isIOS] = [require('BrowserEventTranslator/Pointer'),require('BrowserEventTranslator/Touch'),require('BrowserEventTranslator/Mouse'),require('BrowserEventTranslator/Point'),
     require('BrowserEventTranslator/EventType'),
     require('BrowserEventTranslator/env/supports'),
     require('BrowserEventTranslator/env/ua/isIOS')];
@@ -151,6 +151,10 @@ function () {
     }
     if (supports.PointerEvent) {
       return Pointer;
+    }
+    // macOS Safari 12まで
+    if (supports.MouseEvent) {
+      return Mouse;
     }
     throw new Error('このブラウザではBrowserEventTranslatorは使用できません')
   })();
