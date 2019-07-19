@@ -158,5 +158,18 @@ define('BrowserEventTranslator/EventType',function () {
    * @see BeautifulProperties.Events
    * @see BrowserEventTranslator.Point
    */
+  /**
+   * @name pointercancel
+   * @type string
+   * @memberOf BrowserEventTranslator.EventType
+   * @readonly
+   *
+   * @description <pre>pointercancel event
+   * ブラウザのサポート状況、ユーザが使用する入力デバイスの違いによりeventによりpointercancel/touchcancel eventが発火するが、
+   * それを統一してBrowserEventTranslatorに対して発火する。
+   * MouseEventについては対応していない</pre>
+   *
+   * @see BeautifulProperties.Events
+   */
   return EventType;
 });
