@@ -140,6 +140,9 @@ function () {
    * @see BrowserEventTranslator_Base
    */
   const BrowserEventTranslator = (()=>{
+    if (supports.PointerEvent) {
+      return Pointer;
+    }
     // MobileSafariはMouseEventもサポートしているので他環境と同じ優先順位で振り分けると決して発火しないMouseEvent版になり操作できない
     if (isIOS()) {
       if (supports.TouchEvent) {
@@ -148,9 +151,6 @@ function () {
         console.error('MobileSafari(iOS)でTouchEvent非サポートはおかしい');
         throw new Error('MobileSafari(iOS)でTouchEvent非サポートはおかしい');
       }
-    }
-    if (supports.PointerEvent) {
-      return Pointer;
     }
     // macOS Safari 12まで
     if (supports.MouseEvent) {
