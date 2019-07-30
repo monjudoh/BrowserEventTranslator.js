@@ -188,8 +188,9 @@ define(
      * @param {PointerEvent} ev
      */
     eventHandlers.pointercancel = function pointercancel(ev) {
+      const points = this.pointsFromEvent(ev);
       this.stopPointerTracking(ev);
-      this.trigger(EventType.pointercancel, ev);
+      this.trigger(EventType.pointercancel, ev, points);
     };
     return BrowserEventTranslator;
   }
