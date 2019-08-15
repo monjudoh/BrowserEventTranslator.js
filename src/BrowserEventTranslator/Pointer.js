@@ -160,7 +160,9 @@ define(
      * @param {PointerEvent} ev
      */
     eventHandlers.pointerdown = function pointerdown(ev) {
-      ev.target.setPointerCapture(ev.pointerId);
+      if (this.pointerCapture) {
+        ev.target.setPointerCapture(ev.pointerId);
+      }
       this.setUpPointerTracking(ev);
       this.trigger(EventType.pointerdown, ev, this.pointsFromEvent(ev));
     };
