@@ -29,6 +29,13 @@ define(
         if (this.options.touchAction) {
           this.el.style.touchAction = this.options.touchAction;
         }
+
+        // iOS,iPadOSのSafari13ではpointerupが短時間で連続して拾えない問題があり、touchstartに空handlerを登録しておくと回避できる
+        // TODO Safari13.1以降で解消された場合にこれを除外する
+        if (/AppleWebKit\/605/.exec(navigator.userAgent) && 'onpointerdown' in document.documentElement && 'ontouchstart' in document.documentElement) {
+          this._addDOMEvent('touchstart', ()=>{});
+        }
+
         const types = Object.keys(eventHandlers);
         for (const type of types) {
           const handler = eventHandlers[type];
