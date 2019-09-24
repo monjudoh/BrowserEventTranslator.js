@@ -120,9 +120,22 @@ define('BrowserEventTranslator/Touch',
           pointInfoDict[identifier] = new PointInfo(Point.fromTouch(touch));
           return pointInfoDict[identifier];
         });
-    
+        const pointInfo = added[0];
+        const longPressIssuer = ()=>{
+          /*
+           * this.pointInfoDictに発行時のpointInfoが含まれている
+           * 指先を離したらtouchendが呼ばれ削除されている
+           */
+          const pointInfoList = Object.keys(this.pointInfoDict).map((key)=>this.pointInfoDict[key]);
+          if (pointInfoList.includes(pointInfo) && this.isNotSlided(pointInfo.start, pointInfo.tracking)) {
+            if (this.trace) {
+              console.log(this.tracePrefix + 'recognize as longPress');
+            }
+            this.trigger(EventType.longPress, pointInfo.current);
+          }
+        };
         // 長押し計測のスタート
-        this.longPress = setTimeout(longPressIssuer.bind(this,added[0]),this.longPressTimeLimit);
+        this.longPress = setTimeout(longPressIssuer,this.longPressTimeLimit);
       }
       /**
        * @function trackPointer
@@ -176,20 +189,11 @@ define('BrowserEventTranslator/Touch',
       this.finishPointerTracking(ev);
       this.trigger(EventType.pointerup, ev, points);
     };
-
-    function longPressIssuer(pointInfo) {
-      /*
-       * this.pointInfoDictに発行時のpointInfoが含まれている
-       * 指先を離したらtouchendが呼ばれ削除されている
-       */
-      const pointInfoList = Object.keys(this.pointInfoDict).map((key)=>this.pointInfoDict[key]);
-      if (pointInfoList.includes(pointInfo) && this.isNotSlided(pointInfo.start, pointInfo.tracking)) {
-        if (this.trace) {
-          console.log(this.tracePrefix + 'recognize as longPress');
-        }
-        this.trigger(EventType.longPress, pointInfo.current);
-      }
-    }
+    eventHandlers.touchcancel = function touchcancel(ev) {
+      const points = this.pointsFromEvent(ev);
+      this.stopPointerTracking(ev);
+      this.trigger(EventType.pointercancel, ev, points);
+    };
     return BrowserEventTranslator;
   }
 );

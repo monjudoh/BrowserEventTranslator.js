@@ -2,6 +2,14 @@
 BrowserEventTranslator
 ======================
 
+Browser Support
+===============
+
+- Chrome55+
+- Firefox59+
+- Safari10+
+- EdgeHTML12+
+
 Links
 =====
 

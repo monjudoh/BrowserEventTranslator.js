@@ -26,7 +26,17 @@ define(
         super(el, options);
         this.pointInfoDict = Object.create(null);
         this.eventDict = Object.create(null);
-        this.el.style.touchAction = 'none';
+        if (this.options.touchAction) {
+          this.el.style.touchAction = this.options.touchAction;
+        }
+
+        // iOS,iPadOSのSafari13ではpointerupが短時間で連続して拾えない問題があり、touchstartに空handlerを登録しておくと回避できる
+        // TODO Safari13.1以降で解消された場合にこれを除外する
+        if (/AppleWebKit\/605/.exec(navigator.userAgent) && 'onpointerdown' in document.documentElement && 'ontouchstart' in document.documentElement) {
+          // これがtouchstartだとtouch-actionで指定されたデフォルト動作の許可ができない
+          this._addDOMEvent('touchend', ()=>{});
+        }
+
         const types = Object.keys(eventHandlers);
         for (const type of types) {
           const handler = eventHandlers[type];
@@ -94,6 +104,10 @@ define(
         const pointInfo = this.pointInfoDict[ev.pointerId];
         delete this.pointInfoDict[ev.pointerId];
         delete this.eventDict[ev.pointerId];
+        if (this.longPress) {
+          clearTimeout(this.longPress);
+        }
+        delete this.longPress;
         return pointInfo;
       }
       /**
@@ -108,8 +122,21 @@ define(
         if (this.trace) {
           console.log(this.tracePrefix + 'setUpPointerTracking',ev.pointerId);
         }
-        this.pointInfoDict[ev.pointerId] = new PointInfo(Point.fromEvent(ev));
+
+        const pointInfo = new PointInfo(Point.fromEvent(ev));
+        this.pointInfoDict[ev.pointerId] = pointInfo;
         this.eventDict[ev.pointerId] = ev;
+        const longPressIssuer = ()=>{
+          const pointInfoList = Object.keys(this.pointInfoDict).map((key)=>this.pointInfoDict[key]);
+          if (pointInfoList.includes(pointInfo) && this.isNotSlided(pointInfo.start, pointInfo.tracking)) {
+            if (this.trace) {
+              console.log(this.tracePrefix + 'recognize as longPress');
+            }
+            this.trigger(EventType.longPress, pointInfo.current);
+          }
+        };
+        // 長押し計測のスタート
+        this.longPress = setTimeout(longPressIssuer,this.longPressTimeLimit);
       }
       /**
        * @function trackPointer
@@ -141,7 +168,9 @@ define(
      * @param {PointerEvent} ev
      */
     eventHandlers.pointerdown = function pointerdown(ev) {
-      ev.target.setPointerCapture(ev.pointerId);
+      if (this.pointerCapture) {
+        ev.target.setPointerCapture(ev.pointerId);
+      }
       this.setUpPointerTracking(ev);
       this.trigger(EventType.pointerdown, ev, this.pointsFromEvent(ev));
     };
@@ -169,7 +198,9 @@ define(
      * @param {PointerEvent} ev
      */
     eventHandlers.pointercancel = function pointercancel(ev) {
+      const points = this.pointsFromEvent(ev);
       this.stopPointerTracking(ev);
+      this.trigger(EventType.pointercancel, ev, points);
     };
     return BrowserEventTranslator;
   }

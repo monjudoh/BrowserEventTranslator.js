@@ -27,6 +27,7 @@ function () {
         longPressTimeLimit: 1000,
         preventDefault: true,
         stopPropagation: false,
+        pointerCapture: false,
         trace: false,
         tracePrefix: undefined
       },options);

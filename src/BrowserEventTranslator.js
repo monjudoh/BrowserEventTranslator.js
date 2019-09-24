@@ -1,18 +1,18 @@
 define('BrowserEventTranslator',
 [
-  'BrowserEventTranslator/Pointer','BrowserEventTranslator/Touch','BrowserEventTranslator/Mouse','BrowserEventTranslator/Point','BrowserEventTranslator/TouchAndMouse',
+  'BrowserEventTranslator/Pointer','BrowserEventTranslator/Touch','BrowserEventTranslator/Mouse','BrowserEventTranslator/Point',
   'BrowserEventTranslator/EventType',
   'BrowserEventTranslator/env/supports',
-  'BrowserEventTranslator/env/ua/isIOS','BrowserEventTranslator/env/ua/isAndroid'
+  'BrowserEventTranslator/env/ua/isIOS'
 ],
 function () {
-  const [Pointer,Touch,Mouse,Point,TouchAndMouse,
+  const [Pointer,Touch,Mouse,Point,
     EventType,
     supports,
-    isIOS,isAndroid] = [require('BrowserEventTranslator/Pointer'),require('BrowserEventTranslator/Touch'),require('BrowserEventTranslator/Mouse'),require('BrowserEventTranslator/Point'),require('BrowserEventTranslator/TouchAndMouse')
-    ,require('BrowserEventTranslator/EventType'),
+    isIOS] = [require('BrowserEventTranslator/Pointer'),require('BrowserEventTranslator/Touch'),require('BrowserEventTranslator/Mouse'),require('BrowserEventTranslator/Point'),
+    require('BrowserEventTranslator/EventType'),
     require('BrowserEventTranslator/env/supports'),
-    require('BrowserEventTranslator/env/ua/isIOS'),require('BrowserEventTranslator/env/ua/isAndroid')];
+    require('BrowserEventTranslator/env/ua/isIOS')];
   /**
    * @typedef BrowserEventTranslator~Options
    * @property {number=} swipeDistance
@@ -140,6 +140,9 @@ function () {
    * @see BrowserEventTranslator_Base
    */
   const BrowserEventTranslator = (()=>{
+    if (supports.PointerEvent) {
+      return Pointer;
+    }
     // MobileSafariはMouseEventもサポートしているので他環境と同じ優先順位で振り分けると決して発火しないMouseEvent版になり操作できない
     if (isIOS()) {
       if (supports.TouchEvent) {
@@ -149,25 +152,11 @@ function () {
         throw new Error('MobileSafari(iOS)でTouchEvent非サポートはおかしい');
       }
     }
-    if (supports.PointerEvent) {
-      return Pointer;
-    }
-    // AndroidChrome上ではTouchEventの後でMouseEventも発火してしまうのでTouchAndMouseを返すと問題がある
-    // (PointerEvent未対応のChrome54以前)
-    if (isAndroid()) {
-      return Touch;
-    }
-    // タッチパネル+マウスを搭載したマシンとWin8+でのGoogle Chrome等MouseEvent/TouchEvent両サポート環境
-    // (PointerEvent未対応のChrome54以前)
-    if (supports.MouseEvent && supports.TouchEvent) {
-      return TouchAndMouse;
-    }
+    // macOS Safari 12まで
     if (supports.MouseEvent) {
       return Mouse;
     }
-    if (supports.TouchEvent) {
-      return Touch;
-    }
+    throw new Error('このブラウザではBrowserEventTranslatorは使用できません')
   })();
   BrowserEventTranslator.Point = Point;
   BrowserEventTranslator.EventType = EventType;
