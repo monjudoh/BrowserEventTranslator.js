@@ -1,6 +1,6 @@
 /**
  * @module BrowserEventTranslator
- * @version 0.1.0
+ * @version 1.0.0
  * @author jbking,monjudoh
  * @copyright (c) 2014 jbking,monjudoh<br/>
  * Dual licensed under the MIT (MIT-LICENSE.txt)<br/>
@@ -9,7 +9,7 @@
  * @see BrowserEventTranslator
  */
 define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulProperties) {
-  var BrowserEventTranslator_EventType, BrowserEventTranslator_Base, BrowserEventTranslator_PointInfo, BrowserEventTranslator_Point, BrowserEventTranslator_env_supports, BrowserEventTranslator_Pointer, BrowserEventTranslator_Touch, BrowserEventTranslator_Mouse, BrowserEventTranslator_TouchAndMouse, BrowserEventTranslator_env_ua_isIOS, BrowserEventTranslator_env_ua_isAndroid, BrowserEventTranslator;
+  var BrowserEventTranslator_EventType, BrowserEventTranslator_Base, BrowserEventTranslator_PointInfo, BrowserEventTranslator_Point, BrowserEventTranslator_env_supports, BrowserEventTranslator_Pointer, BrowserEventTranslator_Touch, BrowserEventTranslator_Mouse, BrowserEventTranslator_env_ua_isIOS, BrowserEventTranslator;
   BrowserEventTranslator_EventType = function () {
     /**
      * @name EventType
@@ -26,6 +26,7 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
       pointerdown: 'controller:event:pointerdown',
       pointermove: 'controller:event:pointermove',
       pointerup: 'controller:event:pointerup',
+      pointercancel: 'controller:event:pointercancel',
       longPress: 'controller:event:longpress'
     };
     Object.freeze(EventType);
@@ -168,6 +169,19 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
      * @see BeautifulProperties.Events
      * @see BrowserEventTranslator.Point
      */
+    /**
+     * @name pointercancel
+     * @type string
+     * @memberOf BrowserEventTranslator.EventType
+     * @readonly
+     *
+     * @description <pre>pointercancel event
+     * ブラウザのサポート状況、ユーザが使用する入力デバイスの違いによりeventによりpointercancel/touchcancel eventが発火するが、
+     * それを統一してBrowserEventTranslatorに対して発火する。
+     * MouseEventについては対応していない</pre>
+     *
+     * @see BeautifulProperties.Events
+     */
     return EventType;
   }();
   BrowserEventTranslator_Base = function () {
@@ -202,6 +216,7 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
           longPressTimeLimit: 1000,
           preventDefault: true,
           stopPropagation: false,
+          pointerCapture: false,
           trace: false,
           tracePrefix: undefined
         }, options);
@@ -706,7 +721,16 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
         super(el, options);
         this.pointInfoDict = Object.create(null);
         this.eventDict = Object.create(null);
-        this.el.style.touchAction = 'none';
+        if (this.options.touchAction) {
+          this.el.style.touchAction = this.options.touchAction;
+        }
+        // iOS,iPadOSのSafari13ではpointerupが短時間で連続して拾えない問題があり、touchstartに空handlerを登録しておくと回避できる
+        // TODO Safari13.1以降で解消された場合にこれを除外する
+        if (/AppleWebKit\/605/.exec(navigator.userAgent) && 'onpointerdown' in document.documentElement && 'ontouchstart' in document.documentElement) {
+          // これがtouchstartだとtouch-actionで指定されたデフォルト動作の許可ができない
+          this._addDOMEvent('touchend', () => {
+          });
+        }
         const types = Object.keys(eventHandlers);
         for (const type of types) {
           const handler = eventHandlers[type];
@@ -775,6 +799,10 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
         const pointInfo = this.pointInfoDict[ev.pointerId];
         delete this.pointInfoDict[ev.pointerId];
         delete this.eventDict[ev.pointerId];
+        if (this.longPress) {
+          clearTimeout(this.longPress);
+        }
+        delete this.longPress;
         return pointInfo;
       }
       /**
@@ -789,8 +817,20 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
         if (this.trace) {
           console.log(this.tracePrefix + 'setUpPointerTracking', ev.pointerId);
         }
-        this.pointInfoDict[ev.pointerId] = new PointInfo(Point.fromEvent(ev));
+        const pointInfo = new PointInfo(Point.fromEvent(ev));
+        this.pointInfoDict[ev.pointerId] = pointInfo;
         this.eventDict[ev.pointerId] = ev;
+        const longPressIssuer = () => {
+          const pointInfoList = Object.keys(this.pointInfoDict).map(key => this.pointInfoDict[key]);
+          if (pointInfoList.includes(pointInfo) && this.isNotSlided(pointInfo.start, pointInfo.tracking)) {
+            if (this.trace) {
+              console.log(this.tracePrefix + 'recognize as longPress');
+            }
+            this.trigger(EventType.longPress, pointInfo.current);
+          }
+        };
+        // 長押し計測のスタート
+        this.longPress = setTimeout(longPressIssuer, this.longPressTimeLimit);
       }
       /**
        * @function trackPointer
@@ -821,7 +861,9 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
      * @param {PointerEvent} ev
      */
     eventHandlers.pointerdown = function pointerdown(ev) {
-      ev.target.setPointerCapture(ev.pointerId);
+      if (this.pointerCapture) {
+        ev.target.setPointerCapture(ev.pointerId);
+      }
       this.setUpPointerTracking(ev);
       this.trigger(EventType.pointerdown, ev, this.pointsFromEvent(ev));
     };
@@ -849,7 +891,9 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
      * @param {PointerEvent} ev
      */
     eventHandlers.pointercancel = function pointercancel(ev) {
+      const points = this.pointsFromEvent(ev);
       this.stopPointerTracking(ev);
+      this.trigger(EventType.pointercancel, ev, points);
     };
     return BrowserEventTranslator;
   }();
@@ -972,8 +1016,22 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
           pointInfoDict[identifier] = new PointInfo(Point.fromTouch(touch));
           return pointInfoDict[identifier];
         });
+        const pointInfo = added[0];
+        const longPressIssuer = () => {
+          /*
+           * this.pointInfoDictに発行時のpointInfoが含まれている
+           * 指先を離したらtouchendが呼ばれ削除されている
+           */
+          const pointInfoList = Object.keys(this.pointInfoDict).map(key => this.pointInfoDict[key]);
+          if (pointInfoList.includes(pointInfo) && this.isNotSlided(pointInfo.start, pointInfo.tracking)) {
+            if (this.trace) {
+              console.log(this.tracePrefix + 'recognize as longPress');
+            }
+            this.trigger(EventType.longPress, pointInfo.current);
+          }
+        };
         // 長押し計測のスタート
-        this.longPress = setTimeout(longPressIssuer.bind(this, added[0]), this.longPressTimeLimit);
+        this.longPress = setTimeout(longPressIssuer, this.longPressTimeLimit);
       }
       /**
        * @function trackPointer
@@ -1027,19 +1085,11 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
       this.finishPointerTracking(ev);
       this.trigger(EventType.pointerup, ev, points);
     };
-    function longPressIssuer(pointInfo) {
-      /*
-       * this.pointInfoDictに発行時のpointInfoが含まれている
-       * 指先を離したらtouchendが呼ばれ削除されている
-       */
-      const pointInfoList = Object.keys(this.pointInfoDict).map(key => this.pointInfoDict[key]);
-      if (pointInfoList.includes(pointInfo) && this.isNotSlided(pointInfo.start, pointInfo.tracking)) {
-        if (this.trace) {
-          console.log(this.tracePrefix + 'recognize as longPress');
-        }
-        this.trigger(EventType.longPress, pointInfo.current);
-      }
-    }
+    eventHandlers.touchcancel = function touchcancel(ev) {
+      const points = this.pointsFromEvent(ev);
+      this.stopPointerTracking(ev);
+      this.trigger(EventType.pointercancel, ev, points);
+    };
     return BrowserEventTranslator;
   }();
   BrowserEventTranslator_Mouse = function () {
@@ -1120,6 +1170,10 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
         }
         const pointInfo = this.pointInfo;
         delete this.pointInfo;
+        if (this.longPress) {
+          clearTimeout(this.longPress);
+        }
+        delete this.longPress;
         return pointInfo;
       }
       /**
@@ -1135,6 +1189,17 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
           console.log(this.tracePrefix + 'setUpPointerTracking');
         }
         this.pointInfo = new PointInfo(Point.fromEvent(ev));
+        const pointInfo = this.pointInfo;
+        const longPressIssuer = () => {
+          if (pointInfo === this.pointInfo && this.isNotSlided(pointInfo.start, pointInfo.tracking)) {
+            if (this.trace) {
+              console.log(this.tracePrefix + 'recognize as longPress');
+            }
+            this.trigger(EventType.longPress, pointInfo.current);
+          }
+        };
+        // 長押し計測のスタート
+        this.longPress = setTimeout(longPressIssuer, this.longPressTimeLimit);
       }
       /**
        * @function trackPointer
@@ -1186,105 +1251,18 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
     };
     return BrowserEventTranslator;
   }();
-  BrowserEventTranslator_TouchAndMouse = function () {
-    const [Base, Touch, Mouse] = [
-      BrowserEventTranslator_Base,
-      BrowserEventTranslator_Touch,
-      BrowserEventTranslator_Mouse
-    ];
-    const touchProto = Touch.prototype;
-    const mouseProto = Mouse.prototype;
-    const eventHandlers = Object.create(null);
-    {
-      const keys = Object.keys(Touch.eventHandlers);
-      for (const key of keys) {
-        eventHandlers[key] = Touch.eventHandlers[key];
-      }
-    }
-    {
-      const keys = Object.keys(Mouse.eventHandlers);
-      for (const key of keys) {
-        eventHandlers[key] = Mouse.eventHandlers[key];
-      }
-    }
-    /**
-     * @class BrowserEventTranslator_TouchAndMouse
-     * @extends BrowserEventTranslator_Base
-     * @see BrowserEventTranslator_Touch
-     * @see BrowserEventTranslator_Mouse
-     *
-     * @param {Element} el
-     * @param {BrowserEventTranslator~Options} options
-     * @private
-     */
-    class BrowserEventTranslator extends Base {
-      constructor(el, options) {
-        super(el, options);
-        this.pointInfoDict = Object.create(null);
-        touchProto._addAllEventTrace.call(this);
-        mouseProto._addAllEventTrace.call(this);
-        const types = Object.keys(eventHandlers);
-        for (const type of types) {
-          const handler = eventHandlers[type];
-          this._addDOMEvent(type, handler);
-        }
-      }
-      /**
-       * @function pointsFromEvent
-       * @memberOf BrowserEventTranslator_TouchAndMouse#
-       * @override
-       * @see BrowserEventTranslator_Base#pointsFromEvent
-       *
-       * @param {TouchEvent|MouseEvent} ev
-       */
-      pointsFromEvent(ev) {
-        if (ev instanceof TouchEvent) {
-          return touchProto.pointsFromEvent.call(this, ev);
-        } else if (ev instanceof MouseEvent) {
-          return mouseProto.pointsFromEvent.call(this, ev);
-        }
-      }
-      stopPointerTracking(ev) {
-        if (ev instanceof TouchEvent) {
-          return touchProto.stopPointerTracking.call(this, ev);
-        } else if (ev instanceof MouseEvent) {
-          return mouseProto.stopPointerTracking.call(this, ev);
-        }
-      }
-      setUpPointerTracking(ev) {
-        if (ev instanceof TouchEvent) {
-          touchProto.setUpPointerTracking.call(this, ev);
-        } else if (ev instanceof MouseEvent) {
-          mouseProto.setUpPointerTracking.call(this, ev);
-        }
-      }
-      trackPointer(ev) {
-        if (ev instanceof TouchEvent) {
-          touchProto.trackPointer.call(this, ev);
-        } else if (ev instanceof MouseEvent) {
-          mouseProto.trackPointer.call(this, ev);
-        }
-      }
-    }
-    return BrowserEventTranslator;
-  }();
   BrowserEventTranslator_env_ua_isIOS = function isIOS() {
     return navigator.userAgent.indexOf('like Mac OS X') >= 0;
   };
-  BrowserEventTranslator_env_ua_isAndroid = function isAndroid() {
-    return navigator.userAgent.indexOf('Android') >= 0;
-  };
   BrowserEventTranslator = function () {
-    const [Pointer, Touch, Mouse, Point, TouchAndMouse, EventType, supports, isIOS, isAndroid] = [
+    const [Pointer, Touch, Mouse, Point, EventType, supports, isIOS] = [
       BrowserEventTranslator_Pointer,
       BrowserEventTranslator_Touch,
       BrowserEventTranslator_Mouse,
       BrowserEventTranslator_Point,
-      BrowserEventTranslator_TouchAndMouse,
       BrowserEventTranslator_EventType,
       BrowserEventTranslator_env_supports,
-      BrowserEventTranslator_env_ua_isIOS,
-      BrowserEventTranslator_env_ua_isAndroid
+      BrowserEventTranslator_env_ua_isIOS
     ];
     /**
      * @typedef BrowserEventTranslator~Options
@@ -1413,6 +1391,9 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
      * @see BrowserEventTranslator_Base
      */
     const BrowserEventTranslator = (() => {
+      if (supports.PointerEvent) {
+        return Pointer;
+      }
       // MobileSafariはMouseEventもサポートしているので他環境と同じ優先順位で振り分けると決して発火しないMouseEvent版になり操作できない
       if (isIOS()) {
         if (supports.TouchEvent) {
@@ -1422,25 +1403,11 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
           throw new Error('MobileSafari(iOS)でTouchEvent非サポートはおかしい');
         }
       }
-      if (supports.PointerEvent) {
-        return Pointer;
-      }
-      // AndroidChrome上ではTouchEventの後でMouseEventも発火してしまうのでTouchAndMouseを返すと問題がある
-      // (PointerEvent未対応のChrome54以前)
-      if (isAndroid()) {
-        return Touch;
-      }
-      // タッチパネル+マウスを搭載したマシンとWin8+でのGoogle Chrome等MouseEvent/TouchEvent両サポート環境
-      // (PointerEvent未対応のChrome54以前)
-      if (supports.MouseEvent && supports.TouchEvent) {
-        return TouchAndMouse;
-      }
+      // macOS Safari 12まで
       if (supports.MouseEvent) {
         return Mouse;
       }
-      if (supports.TouchEvent) {
-        return Touch;
-      }
+      throw new Error('このブラウザではBrowserEventTranslatorは使用できません');
     })();
     BrowserEventTranslator.Point = Point;
     BrowserEventTranslator.EventType = EventType;
