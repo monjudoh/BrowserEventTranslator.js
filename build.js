@@ -10,7 +10,7 @@ var main = module.exports = function main(options) {
     exclude:'BeautifulProperties'.split(' '),
     distDir:path.resolve(__dirname, 'dist'),
     startBefore: _.template(fs.readFileSync(path.resolve(__dirname, 'copyright.template')).toString())({
-      version:'1.0.0'
+      version:'2.0.0'
     })
   },function (builtFilePath,code){
 //    console.log(builtFilePath);

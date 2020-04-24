@@ -131,7 +131,7 @@ define('BrowserEventTranslator/Touch',
             if (this.trace) {
               console.log(this.tracePrefix + 'recognize as longPress');
             }
-            this.trigger(EventType.longPress, pointInfo.current);
+            this.trigger(EventType.longPress, ev, pointInfo.current);
           }
         };
         // 長押し計測のスタート
