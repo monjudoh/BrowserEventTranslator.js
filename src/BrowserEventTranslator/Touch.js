@@ -108,6 +108,9 @@ define('BrowserEventTranslator/Touch',
         if (this.trace) {
           console.log(this.tracePrefix + 'setUpPointerTracking',ev);
         }
+        if (this.longPress) {
+          clearTimeout(this.longPress);
+        }
         const pointInfoDict = this.pointInfoDict;
         const touches = Array.from(ev.touches);
         const identifier2touch = Object.create(null);

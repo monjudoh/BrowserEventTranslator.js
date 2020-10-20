@@ -122,7 +122,9 @@ define(
         if (this.trace) {
           console.log(this.tracePrefix + 'setUpPointerTracking',ev.pointerId);
         }
-
+        if (this.longPress) {
+          clearTimeout(this.longPress);
+        }
         const pointInfo = new PointInfo(Point.fromEvent(ev));
         this.pointInfoDict[ev.pointerId] = pointInfo;
         this.eventDict[ev.pointerId] = ev;

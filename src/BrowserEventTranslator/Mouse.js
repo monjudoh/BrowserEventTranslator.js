@@ -98,6 +98,9 @@ define(
         if (this.trace) {
           console.log(this.tracePrefix + 'setUpPointerTracking');
         }
+        if (this.longPress) {
+          clearTimeout(this.longPress);
+        }
         this.pointInfo = new PointInfo(Point.fromEvent(ev));
         const pointInfo = this.pointInfo;
         const longPressIssuer = ()=>{
