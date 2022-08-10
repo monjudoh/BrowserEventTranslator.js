@@ -2,8 +2,7 @@ define(
   'BrowserEventTranslator/Pointer',
   [
     'BrowserEventTranslator/Base','BrowserEventTranslator/PointInfo',
-    'BrowserEventTranslator/Point','BrowserEventTranslator/EventType',
-    'BrowserEventTranslator/env/supports'
+    'BrowserEventTranslator/Point','BrowserEventTranslator/EventType'
   ],
   function () {
     const [Base,PointInfo,

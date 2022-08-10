@@ -1,18 +1,12 @@
 define('BrowserEventTranslator',
 [
-  'BrowserEventTranslator/Pointer','BrowserEventTranslator/Touch','BrowserEventTranslator/Mouse','BrowserEventTranslator/Point',
-  'BrowserEventTranslator/EventType',
-  'BrowserEventTranslator/env/supports',
-  'BrowserEventTranslator/env/ua/isIOS'
+  'BrowserEventTranslator/Pointer','BrowserEventTranslator/Point',
+  'BrowserEventTranslator/EventType'
 ],
 function () {
-  const [Pointer,Touch,Mouse,Point,
-    EventType,
-    supports,
-    isIOS] = [require('BrowserEventTranslator/Pointer'),require('BrowserEventTranslator/Touch'),require('BrowserEventTranslator/Mouse'),require('BrowserEventTranslator/Point'),
-    require('BrowserEventTranslator/EventType'),
-    require('BrowserEventTranslator/env/supports'),
-    require('BrowserEventTranslator/env/ua/isIOS')];
+  const [Pointer, Point, EventType] = [require('BrowserEventTranslator/Pointer'),
+    require('BrowserEventTranslator/Point'),
+    require('BrowserEventTranslator/EventType')];
   /**
    * @typedef BrowserEventTranslator~Options
    * @property {number=} swipeDistance
@@ -139,25 +133,7 @@ function () {
    * </pre>
    * @see BrowserEventTranslator_Base
    */
-  const BrowserEventTranslator = (()=>{
-    if (supports.PointerEvent) {
-      return Pointer;
-    }
-    // MobileSafariはMouseEventもサポートしているので他環境と同じ優先順位で振り分けると決して発火しないMouseEvent版になり操作できない
-    if (isIOS()) {
-      if (supports.TouchEvent) {
-        return Touch;
-      } else {
-        console.error('MobileSafari(iOS)でTouchEvent非サポートはおかしい');
-        throw new Error('MobileSafari(iOS)でTouchEvent非サポートはおかしい');
-      }
-    }
-    // macOS Safari 12まで
-    if (supports.MouseEvent) {
-      return Mouse;
-    }
-    throw new Error('このブラウザではBrowserEventTranslatorは使用できません')
-  })();
+  const BrowserEventTranslator = Pointer;
   BrowserEventTranslator.Point = Point;
   BrowserEventTranslator.EventType = EventType;
   return BrowserEventTranslator;
