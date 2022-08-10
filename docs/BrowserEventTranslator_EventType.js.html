@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: BrowserEventTranslator/EventType.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: BrowserEventTranslator/EventType.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>define('BrowserEventTranslator/EventType',function () {
+  /**
+   * @name EventType
+   * @namespace
+   * @memberOf BrowserEventTranslator
+   */
+  const EventType = {
+    swipeLeft: 'controller:event:swipeleft',
+    swipeRight: 'controller:event:swiperight',
+    swipeUp: 'controller:event:swipeup',
+    swipeDown: 'controller:event:swipedown',
+    tap: 'controller:event:tap',
+    doubleTap: 'controller:event:doubletap',
+    pointerdown: 'controller:event:pointerdown',
+    pointermove: 'controller:event:pointermove',
+    pointerup: 'controller:event:pointerup',
+    pointercancel: 'controller:event:pointercancel',
+    longPress: 'controller:event:longpress'
+  };
+  Object.freeze(EventType);
+  /**
+   * @name swipeLeft
+   * @type string
+   * @memberOf BrowserEventTranslator.EventType
+   * @readonly
+   *
+   * @description &lt;pre>左swipe event
+   * BeautifulPropertiesのEvent objectに続くeventHandlerの引数はBrowserEventTranslator.Point
+   * pointerupした時点での座標&lt;/pre>
+   *
+   * @see BeautifulProperties.Events
+   * @see BrowserEventTranslator.Point
+   * @see BrowserEventTranslator#swipeDistance
+   * @see BrowserEventTranslator#horizontalSwipeDegree
+   */
+  /**
+   * @name swipeRight
+   * @type string
+   * @memberOf BrowserEventTranslator.EventType
+   * @readonly
+   *
+   * @description &lt;pre>右swipe event
+   * BeautifulPropertiesのEvent objectに続くeventHandlerの引数はBrowserEventTranslator.Point
+   * pointerupした時点での座標&lt;/pre>
+   *
+   * @see BeautifulProperties.Events
+   * @see BrowserEventTranslator.Point
+   * @see BrowserEventTranslator#swipeDistance
+   * @see BrowserEventTranslator#horizontalSwipeDegree
+   */
+  /**
+   * @name swipeUp
+   * @type string
+   * @memberOf BrowserEventTranslator.EventType
+   * @readonly
+   *
+   * @description &lt;pre>上swipe event
+   * BeautifulPropertiesのEvent objectに続くeventHandlerの引数はBrowserEventTranslator.Point
+   * pointerupした時点での座標&lt;/pre>
+   *
+   * @see BeautifulProperties.Events
+   * @see BrowserEventTranslator.Point
+   * @see BrowserEventTranslator#swipeDistance
+   * @see BrowserEventTranslator#horizontalSwipeDegree
+   */
+  /**
+   * @name swipeDown
+   * @type string
+   * @memberOf BrowserEventTranslator.EventType
+   * @readonly
+   *
+   * @description &lt;pre>下swipe event
+   * BeautifulPropertiesのEvent objectに続くeventHandlerの引数はBrowserEventTranslator.Point
+   * pointerupした時点での座標&lt;/pre>
+   *
+   * @see BeautifulProperties.Events
+   * @see BrowserEventTranslator.Point
+   * @see BrowserEventTranslator#swipeDistance
+   * @see BrowserEventTranslator#horizontalSwipeDegree
+   */
+  /**
+   * @name tap
+   * @type string
+   * @memberOf BrowserEventTranslator.EventType
+   * @readonly
+   *
+   * @description &lt;pre>タップ event
+   * pointerdown→pointermove→pointerupの流れでpointerの移動が上下共にdontSlideDistanceの範囲に収まっており、
+   * doubleTapTimeLimitの時間内に次のpointerdown→pointermove→pointerupが完了しなかった場合に発火する(fastClickではない)。
+   * BeautifulPropertiesのEvent objectに続くeventHandlerの引数はUIEvent,BrowserEventTranslator.Point
+   * pointerupした時点での生のUIEventと座標&lt;/pre>
+   *
+   * @see BeautifulProperties.Events
+   * @see BrowserEventTranslator.Point
+   * @see BrowserEventTranslator#dontSlideDistance
+   * @see BrowserEventTranslator#doubleTapTimeLimit
+   */
+  /**
+   * @name doubleTap
+   * @type string
+   * @memberOf BrowserEventTranslator.EventType
+   * @readonly
+   *
+   * @description &lt;pre>ダブルタップ event
+   * pointerdown→pointermove→pointerupの流れでpointerの移動が上下共にdontSlideDistanceの範囲に収まっており、
+   * doubleTapTimeLimitの時間内に次のpointerdown→pointermove→pointerupが完了した場合に発火する。
+   * BeautifulPropertiesのEvent objectに続くeventHandlerの引数はUIEvent,BrowserEventTranslator.Point
+   * pointerupした時点での生のUIEventと座標&lt;/pre>
+   *
+   * @see BeautifulProperties.Events
+   * @see BrowserEventTranslator.Point
+   * @see BrowserEventTranslator#dontSlideDistance
+   * @see BrowserEventTranslator#doubleTapTimeLimit
+   */
+  /**
+   * @name pointerdown
+   * @type string
+   * @memberOf BrowserEventTranslator.EventType
+   * @readonly
+   *
+   * @description &lt;pre>pointerdown event
+   * ブラウザのサポート状況、ユーザが使用する入力デバイスの違いによりeventによりpointerdown/mousedown/touchstart eventが発火するが、
+   * それを統一してBrowserEventTranslatorに対して発火する。
+   * BeautifulPropertiesのEvent objectに続くeventHandlerの引数はUIEvent,BrowserEventTranslator.Pointの配列
+   * pointerdownした際の生のUIEventとその時点でアクティブなpointerの座標&lt;/pre>
+   *
+   * @see BeautifulProperties.Events
+   * @see BrowserEventTranslator.Point
+   */
+  /**
+   * @name pointermove
+   * @type string
+   * @memberOf BrowserEventTranslator.EventType
+   * @readonly
+   *
+   * @description &lt;pre>pointermove event
+   * ブラウザのサポート状況、ユーザが使用する入力デバイスの違いによりeventによりpointermove/mousemove/touchmove eventが発火するが、
+   * それを統一してBrowserEventTranslatorに対して発火する。
+   * BeautifulPropertiesのEvent objectに続くeventHandlerの引数はUIEvent,BrowserEventTranslator.Pointの配列
+   * pointermoveした際の生のUIEventとその時点でアクティブなpointerの座標&lt;/pre>
+   *
+   * @see BeautifulProperties.Events
+   * @see BrowserEventTranslator.Point
+   */
+
+  /**
+   * @name pointerup
+   * @type string
+   * @memberOf BrowserEventTranslator.EventType
+   * @readonly
+   *
+   * @description &lt;pre>pointerup event
+   * ブラウザのサポート状況、ユーザが使用する入力デバイスの違いによりeventによりpointerup/mouseup/touchend eventが発火するが、
+   * それを統一してBrowserEventTranslatorに対して発火する。
+   * BeautifulPropertiesのEvent objectに続くeventHandlerの引数はUIEvent,BrowserEventTranslator.Pointの配列
+   * pointerupした際の生のUIEventとその時点でアクティブなpointerの座標&lt;/pre>
+   *
+   * @see BeautifulProperties.Events
+   * @see BrowserEventTranslator.Point
+   */
+  /**
+   * @name pointercancel
+   * @type string
+   * @memberOf BrowserEventTranslator.EventType
+   * @readonly
+   *
+   * @description &lt;pre>pointercancel event
+   * ブラウザのサポート状況、ユーザが使用する入力デバイスの違いによりeventによりpointercancel/touchcancel eventが発火するが、
+   * それを統一してBrowserEventTranslatorに対して発火する。
+   * MouseEventについては対応していない&lt;/pre>
+   *
+   * @see BeautifulProperties.Events
+   */
+  return EventType;
+});</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="BrowserEventTranslator.EventType.html">EventType</a></li></ul><h3>Classes</h3><ul><li><a href="BrowserEventTranslator.html">BrowserEventTranslator</a></li><li><a href="BrowserEventTranslator.Point.html">Point</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Wed Aug 10 2022 13:58:59 GMT+0900 (日本標準時)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
