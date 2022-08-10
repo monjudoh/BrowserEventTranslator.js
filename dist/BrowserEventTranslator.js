@@ -1,6 +1,6 @@
 /**
  * @module BrowserEventTranslator
- * @version 1.0.0
+ * @version 2.0.1
  * @author jbking,monjudoh
  * @copyright (c) 2014 jbking,monjudoh<br/>
  * Dual licensed under the MIT (MIT-LICENSE.txt)<br/>
@@ -817,6 +817,9 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
         if (this.trace) {
           console.log(this.tracePrefix + 'setUpPointerTracking', ev.pointerId);
         }
+        if (this.longPress) {
+          clearTimeout(this.longPress);
+        }
         const pointInfo = new PointInfo(Point.fromEvent(ev));
         this.pointInfoDict[ev.pointerId] = pointInfo;
         this.eventDict[ev.pointerId] = ev;
@@ -826,7 +829,8 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
             if (this.trace) {
               console.log(this.tracePrefix + 'recognize as longPress');
             }
-            this.trigger(EventType.longPress, pointInfo.current);
+            const latestEv = this.eventDict[ev.pointerId];
+            this.trigger(EventType.longPress, latestEv, pointInfo.current);
           }
         };
         // 長押し計測のスタート
@@ -1004,6 +1008,9 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
         if (this.trace) {
           console.log(this.tracePrefix + 'setUpPointerTracking', ev);
         }
+        if (this.longPress) {
+          clearTimeout(this.longPress);
+        }
         const pointInfoDict = this.pointInfoDict;
         const touches = Array.from(ev.touches);
         const identifier2touch = Object.create(null);
@@ -1027,7 +1034,7 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
             if (this.trace) {
               console.log(this.tracePrefix + 'recognize as longPress');
             }
-            this.trigger(EventType.longPress, pointInfo.current);
+            this.trigger(EventType.longPress, ev, pointInfo.current);
           }
         };
         // 長押し計測のスタート
@@ -1188,6 +1195,9 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
         if (this.trace) {
           console.log(this.tracePrefix + 'setUpPointerTracking');
         }
+        if (this.longPress) {
+          clearTimeout(this.longPress);
+        }
         this.pointInfo = new PointInfo(Point.fromEvent(ev));
         const pointInfo = this.pointInfo;
         const longPressIssuer = () => {
@@ -1195,7 +1205,7 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
             if (this.trace) {
               console.log(this.tracePrefix + 'recognize as longPress');
             }
-            this.trigger(EventType.longPress, pointInfo.current);
+            this.trigger(EventType.longPress, ev, pointInfo.current);
           }
         };
         // 長押し計測のスタート
