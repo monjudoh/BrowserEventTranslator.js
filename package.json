@@ -4,7 +4,7 @@
     "amdbuilder": "0.0.11",
     "esprima": "^4.0.1",
     "estraverse": "^4.2.0",
-    "jsdoc": "~3.3.0-alpha5",
+    "jsdoc": "^3.4.0",
     "underscore": "~1.6.0"
   },
   "scripts": {
