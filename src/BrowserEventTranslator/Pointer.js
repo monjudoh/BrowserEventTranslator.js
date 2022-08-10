@@ -122,7 +122,9 @@ define(
         if (this.trace) {
           console.log(this.tracePrefix + 'setUpPointerTracking',ev.pointerId);
         }
-
+        if (this.longPress) {
+          clearTimeout(this.longPress);
+        }
         const pointInfo = new PointInfo(Point.fromEvent(ev));
         this.pointInfoDict[ev.pointerId] = pointInfo;
         this.eventDict[ev.pointerId] = ev;
@@ -132,7 +134,8 @@ define(
             if (this.trace) {
               console.log(this.tracePrefix + 'recognize as longPress');
             }
-            this.trigger(EventType.longPress, pointInfo.current);
+            const latestEv = this.eventDict[ev.pointerId];
+            this.trigger(EventType.longPress, latestEv, pointInfo.current);
           }
         };
         // 長押し計測のスタート
