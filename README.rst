@@ -7,7 +7,7 @@ Browser Support
 
 - Chrome55+
 - Firefox59+
-- Safari10+
+- Safari13+
 - EdgeHTML12+
 
 Links
