@@ -35,7 +35,7 @@ define(
           // これがtouchstartだとtouch-actionで指定されたデフォルト動作の許可ができない
           this._addDOMEvent('touchend', ()=>{});
         }
-
+        this._addAllEventTrace();
         const types = Object.keys(eventHandlers);
         for (const type of types) {
           const handler = eventHandlers[type];

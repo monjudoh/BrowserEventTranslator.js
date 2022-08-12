@@ -723,6 +723,7 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
           this._addDOMEvent('touchend', () => {
           });
         }
+        this._addAllEventTrace();
         const types = Object.keys(eventHandlers);
         for (const type of types) {
           const handler = eventHandlers[type];
