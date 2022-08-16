@@ -162,6 +162,18 @@ define(
         pointInfo.update(Point.fromEvent(ev));
         this.eventDict[ev.pointerId] = ev;
       }
+      releaseAllPoints(){
+        if (this.trace) {
+          console.log(this.tracePrefix + 'releaseAllPoints');
+        }
+        for (const pointerId of Object.keys(this.pointInfoDict)) {
+          this.stopPointerTracking({pointerId});
+        }
+        // 上記でeventDictも空になっているはずだが一応
+        for (const pointerId of Object.keys(this.eventDict)) {
+          this.stopPointerTracking({pointerId});
+        }
+      }
     }
 
     /**
