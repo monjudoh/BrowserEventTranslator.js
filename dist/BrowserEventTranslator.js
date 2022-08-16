@@ -1,6 +1,6 @@
 /**
  * @module BrowserEventTranslator
- * @version 3.0.0
+ * @version 3.1.0
  * @author jbking,monjudoh
  * @copyright (c) 2014 jbking,monjudoh<br/>
  * Dual licensed under the MIT (MIT-LICENSE.txt)<br/>
@@ -850,6 +850,18 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
         }
         pointInfo.update(Point.fromEvent(ev));
         this.eventDict[ev.pointerId] = ev;
+      }
+      releaseAllPoints() {
+        if (this.trace) {
+          console.log(this.tracePrefix + 'releaseAllPoints');
+        }
+        for (const pointerId of Object.keys(this.pointInfoDict)) {
+          this.stopPointerTracking({ pointerId });
+        }
+        // 上記でeventDictも空になっているはずだが一応
+        for (const pointerId of Object.keys(this.eventDict)) {
+          this.stopPointerTracking({ pointerId });
+        }
       }
     }
     /**
