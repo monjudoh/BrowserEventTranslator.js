@@ -1,6 +1,6 @@
 /**
  * @module BrowserEventTranslator
- * @version 3.0.0
+ * @version 3.1.0
  * @author jbking,monjudoh
  * @copyright (c) 2014 jbking,monjudoh<br/>
  * Dual licensed under the MIT (MIT-LICENSE.txt)<br/>
@@ -27,7 +27,8 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
       pointermove: 'controller:event:pointermove',
       pointerup: 'controller:event:pointerup',
       pointercancel: 'controller:event:pointercancel',
-      longPress: 'controller:event:longpress'
+      longPress: 'controller:event:longpress',
+      releaseAllPoints: 'controller:event:releaseAllPoints'
     };
     Object.freeze(EventType);
     /**
@@ -723,6 +724,7 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
           this._addDOMEvent('touchend', () => {
           });
         }
+        this._addAllEventTrace();
         const types = Object.keys(eventHandlers);
         for (const type of types) {
           const handler = eventHandlers[type];
@@ -849,6 +851,19 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
         }
         pointInfo.update(Point.fromEvent(ev));
         this.eventDict[ev.pointerId] = ev;
+      }
+      releaseAllPoints() {
+        if (this.trace) {
+          console.log(this.tracePrefix + 'releaseAllPoints');
+        }
+        for (const pointerId of Object.keys(this.pointInfoDict)) {
+          this.stopPointerTracking({ pointerId });
+        }
+        // 上記でeventDictも空になっているはずだが一応
+        for (const pointerId of Object.keys(this.eventDict)) {
+          this.stopPointerTracking({ pointerId });
+        }
+        this.trigger(EventType.releaseAllPoints);
       }
     }
     /**

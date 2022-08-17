@@ -35,7 +35,7 @@ define(
           // これがtouchstartだとtouch-actionで指定されたデフォルト動作の許可ができない
           this._addDOMEvent('touchend', ()=>{});
         }
-
+        this._addAllEventTrace();
         const types = Object.keys(eventHandlers);
         for (const type of types) {
           const handler = eventHandlers[type];
@@ -161,6 +161,19 @@ define(
         }
         pointInfo.update(Point.fromEvent(ev));
         this.eventDict[ev.pointerId] = ev;
+      }
+      releaseAllPoints(){
+        if (this.trace) {
+          console.log(this.tracePrefix + 'releaseAllPoints');
+        }
+        for (const pointerId of Object.keys(this.pointInfoDict)) {
+          this.stopPointerTracking({pointerId});
+        }
+        // 上記でeventDictも空になっているはずだが一応
+        for (const pointerId of Object.keys(this.eventDict)) {
+          this.stopPointerTracking({pointerId});
+        }
+        this.trigger(EventType.releaseAllPoints);
       }
     }
 
