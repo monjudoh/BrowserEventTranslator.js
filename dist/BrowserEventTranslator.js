@@ -27,7 +27,8 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
       pointermove: 'controller:event:pointermove',
       pointerup: 'controller:event:pointerup',
       pointercancel: 'controller:event:pointercancel',
-      longPress: 'controller:event:longpress'
+      longPress: 'controller:event:longpress',
+      releaseAllPoints: 'controller:event:releaseAllPoints'
     };
     Object.freeze(EventType);
     /**
@@ -862,6 +863,7 @@ define('BrowserEventTranslator', ['BeautifulProperties'], function (BeautifulPro
         for (const pointerId of Object.keys(this.eventDict)) {
           this.stopPointerTracking({ pointerId });
         }
+        this.trigger(EventType.releaseAllPoints);
       }
     }
     /**
