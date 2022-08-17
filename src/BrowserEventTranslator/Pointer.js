@@ -173,6 +173,7 @@ define(
         for (const pointerId of Object.keys(this.eventDict)) {
           this.stopPointerTracking({pointerId});
         }
+        this.trigger(EventType.releaseAllPoints);
       }
     }
 

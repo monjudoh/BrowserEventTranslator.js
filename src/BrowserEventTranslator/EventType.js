@@ -15,7 +15,8 @@ define('BrowserEventTranslator/EventType',function () {
     pointermove: 'controller:event:pointermove',
     pointerup: 'controller:event:pointerup',
     pointercancel: 'controller:event:pointercancel',
-    longPress: 'controller:event:longpress'
+    longPress: 'controller:event:longpress',
+    releaseAllPoints: 'controller:event:releaseAllPoints'
   };
   Object.freeze(EventType);
   /**
